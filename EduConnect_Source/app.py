@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import logging
 from datetime import timedelta
 from flask import Flask
-from extensions import db
+from EduConnect_Source.extensions import db
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_cors import CORS
 
