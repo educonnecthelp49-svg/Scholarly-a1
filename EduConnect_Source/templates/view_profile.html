@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.full_name }} — EduConnect{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Profile Header -->
+        <div class="card mb-4" style="border: 1px solid rgba(124, 58, 237, 0.15) !important; animation: fadeInUp 0.4s ease;">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center flex-wrap gap-4">
+                    <div class="avatar-circle-lg">
+                        {{ user.full_name[0].upper() }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <h2 class="fw-bold mb-1" style="font-size: 1.5rem;">
+                            {{ user.full_name }}
+                            {% if user.is_admin %}
+                                <i class="fas fa-crown ms-2" style="color: var(--rose); font-size: 1rem;" title="Admin"></i>
+                            {% elif user.is_teacher %}
+                                <i class="fas fa-chalkboard-teacher ms-2" style="color: var(--emerald); font-size: 1rem;" title="Teacher"></i>
+                            {% elif user.is_prefect %}
+                                <i class="fas fa-star ms-2" style="color: var(--amber); font-size: 1rem;" title="Prefect"></i>
+                            {% endif %}
+                        </h2>
+                        <p class="text-muted mb-2">@{{ user.username }}</p>
+
+                        {% if user.bio %}
+                            <p class="mb-3" style="color: var(--text-secondary);">{{ user.bio }}</p>
+                        {% endif %}
+
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <span class="badge bg-primary"><i class="fas fa-envelope me-1"></i>{{ user.email }}</span>
+                            {% if user.is_admin %}
+                                <span class="badge bg-danger"><i class="fas fa-crown me-1"></i>Admin</span>
+                            {% elif user.is_teacher %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-chalkboard-teacher me-1"></i>Teacher
+                                    {% if user.subject_taught %} - {{ user.subject_taught }}{% endif %}
+                                </span>
+                                {% if user.class_teacher_grade and user.class_teacher_section %}
+                                <span class="badge bg-info"><i class="fas fa-users me-1"></i>Class Teacher - Grade {{ user.class_teacher_grade }}{{ user.class_teacher_section }}</span>
+                                {% endif %}
+                            {% elif user.is_prefect %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-star me-1"></i>Prefect
+                                    {% if user.house %} - {{ user.house }}{% endif %}
+                                </span>
+                            {% endif %}
+                            {% if user.grade_level %}
+                                <span class="badge bg-secondary"><i class="fas fa-graduation-cap me-1"></i>Grade {{ user.grade_level }}{% if user.section %}{{ user.section }}{% endif %}</span>
+                            {% endif %}
+                            {% if not user.is_teacher and not user.is_admin and not user.is_parent %}
+                                {% set class_teacher = user.get_class_teacher() %}
+                                <span class="badge bg-light"><i class="fas fa-user-tie me-1"></i>Class Teacher: {% if class_teacher %}{{ class_teacher.full_name }}{% else %}None{% endif %}</span>
+                            {% endif %}
+                            <span class="badge bg-info"><i class="fas fa-calendar me-1"></i>Joined {{ user.date_created.strftime('%B %Y') }}</span>
+
+                            {% if current_user.id != user.id %}
+                                <a href="{{ url_for('view_conversation', username=user.username) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-envelope me-1"></i>Message
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="row mb-4">
+            <div class="col-md-4" style="animation: fadeInUp 0.5s ease;">
+                <div class="card text-center" style="border: 1px solid rgba(124, 58, 237, 0.15) !important;">
+                    <div class="card-body py-4">
+                        <h3 class="fw-bold" style="color: var(--violet); font-size: 2rem;">{{ posts|length }}</h3>
+                        <p class="text-muted mb-0">Posts</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4" style="animation: fadeInUp 0.6s ease;">
+                <div class="card text-center" style="border: 1px solid rgba(16, 185, 129, 0.15) !important;">
+                    <div class="card-body py-4">
+                        <h3 class="fw-bold" style="color: var(--emerald); font-size: 2rem;">
+                            {% set total_likes = 0 %}{% for post in posts %}{% set total_likes = total_likes + post.like_count %}{% endfor %}{{ total_likes }}
+                        </h3>
+                        <p class="text-muted mb-0">Total Likes</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4" style="animation: fadeInUp 0.7s ease;">
+                <div class="card text-center" style="border: 1px solid rgba(6, 182, 212, 0.15) !important;">
+                    <div class="card-body py-4">
+                        <h3 class="fw-bold" style="color: var(--cyan); font-size: 2rem;">
+                            {% set total_comments = 0 %}{% for post in posts %}{% set total_comments = total_comments + post.comments|length %}{% endfor %}{{ total_comments }}
+                        </h3>
+                        <p class="text-muted mb-0">Total Comments</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h4 class="fw-bold mb-3">{{ user.full_name }}'s Posts</h4>
+
+        {% if posts %}
+            {% for post in posts %}
+            <div class="card mb-3" style="animation: fadeInUp {{ 0.3 + loop.index0 * 0.08 }}s ease;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <small class="text-muted"><i class="fas fa-clock me-1"></i>{{ post.date_posted.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-primary"><i class="fas fa-heart me-1"></i>{{ post.like_count }}</span>
+                            <span class="badge bg-secondary"><i class="fas fa-comment me-1"></i>{{ post.comments|length }}</span>
+                        </div>
+                    </div>
+                    <p class="mb-0" style="color: var(--text-secondary); line-height: 1.7;">{{ post.content }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-edit fa-4x mb-3" style="color: var(--text-muted);"></i>
+                    <h5 style="color: var(--text-secondary);">No posts yet</h5>
+                    <p class="text-muted">{{ user.full_name }} hasn't shared anything yet.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

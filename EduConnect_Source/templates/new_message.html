@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}New Message - School Social Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-plus me-2"></i>New Message
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">To</label>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               placeholder="Enter username..." required list="students">
+                        <datalist id="students">
+                            {% for student in students %}
+                                <option value="{{ student.username }}">{{ student.full_name }}</option>
+                            {% endfor %}
+                        </datalist>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Start typing a username to see suggestions.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Message</label>
+                        <textarea class="form-control" id="content" name="content" rows="6" 
+                                  placeholder="Write your message..." required></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('messages') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>Send Message
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Student List -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-users me-2"></i>Available Students
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for student in students %}
+                        <div class="col-md-6 mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle-sm me-2">
+                                    {{ student.full_name[0].upper() }}
+                                </div>
+                                <div>
+                                    <span class="fw-bold">{{ student.full_name }}</span>
+                                    {% if student.is_prefect %}
+                                        <i class="fas fa-star text-warning ms-1" title="Prefect"></i>
+                                    {% endif %}
+                                    <br>
+                                    <small class="text-muted">@{{ student.username }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

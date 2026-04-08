@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block title %}Parent Dashboard — EduConnect{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <h1 class="h3 fw-bold mb-0">
+                <i class="fas fa-eye me-2" style="background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>Parent Monitoring Dashboard
+            </h1>
+            <div>
+                <span class="badge bg-info">VIEW-ONLY ACCESS</span>
+                <span class="ms-2" style="color: var(--text-secondary);">Welcome, {{ user.full_name }}</span>
+            </div>
+        </div>
+
+        <!-- Children Cards -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card" style="border: 1px solid rgba(6, 182, 212, 0.2) !important; animation: fadeInUp 0.3s ease;">
+                    <div class="card-header bg-info">
+                        <h5 class="mb-0"><i class="fas fa-children me-2"></i>Your Children ({{ children|length }})</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if children %}
+                            <div class="row">
+                                {% for child in children %}
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="card" style="border: 1px solid rgba(124, 58, 237, 0.2) !important;">
+                                        <div class="card-body text-center">
+                                            <div class="avatar-circle mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.2rem;">
+                                                {{ child.full_name[0].upper() }}
+                                            </div>
+                                            <h6 class="card-title">{{ child.full_name }}</h6>
+                                            <p class="card-text small text-muted">
+                                                <i class="fas fa-user-graduate me-1"></i>{{ child.grade_level or 'No Grade' }}
+                                                {% if child.house %}<br><i class="fas fa-home me-1"></i>{{ child.house }}{% endif %}
+                                            </p>
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <span class="badge bg-secondary">{{ child.posts|length }} Posts</span>
+                                                <span class="badge bg-info">{{ child.sent_messages|length }} Messages</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-user-plus fa-3x mb-3" style="color: var(--text-muted);"></i>
+                                <h5 style="color: var(--text-secondary);">No Children Assigned</h5>
+                                <p class="text-muted">Contact an administrator to assign children to your parent account.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card" style="animation: fadeInUp 0.4s ease;">
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs" id="parentTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="welcome-tab" data-bs-toggle="tab" data-bs-target="#welcome" type="button" role="tab">
+                                    <i class="fas fa-home me-2"></i>Welcome
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="social-feed-tab" data-bs-toggle="tab" data-bs-target="#social-feed" type="button" role="tab">
+                                    <i class="fas fa-feed me-2"></i>Social Feed
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="child-activity-tab" data-bs-toggle="tab" data-bs-target="#child-activity" type="button" role="tab">
+                                    <i class="fas fa-child me-2"></i>Child Activity
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content" id="parentTabsContent">
+                            <!-- Welcome Tab -->
+                            <div class="tab-pane fade show active" id="welcome" role="tabpanel">
+                                <div class="text-center py-5">
+                                    <div class="mb-4" style="animation: fadeInUp 0.5s ease;">
+                                        <i class="fas fa-user-friends fa-4x" style="background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                                    </div>
+                                    <h2 style="background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;" class="mb-4">Hello Parent!</h2>
+                                    <p class="lead mb-4" style="color: var(--text-secondary);">Welcome to your child monitoring dashboard. Keep track of your children's school activities and social interactions.</p>
+
+                                    <div class="row justify-content-center">
+                                        <div class="col-md-8">
+                                            <div class="p-4 rounded" style="background: var(--bg-hover); border-left: 4px solid var(--violet); text-align: left;">
+                                                <h5 class="mb-3" style="color: var(--text-accent);"><i class="fas fa-info-circle me-2"></i>Parent Guidelines</h5>
+                                                <ul class="list-unstyled">
+                                                    <li class="mb-2"><i class="fas fa-check me-2" style="color: var(--emerald);"></i><strong>Social Feed:</strong> <span class="text-muted">View all school posts in read-only mode</span></li>
+                                                    <li class="mb-2"><i class="fas fa-check me-2" style="color: var(--emerald);"></i><strong>Child Activity:</strong> <span class="text-muted">Monitor your children's posts, engagement, and statistics</span></li>
+                                                    <li class="mb-2"><i class="fas fa-times me-2" style="color: var(--rose);"></i><strong>Restrictions:</strong> <span class="text-muted">Cannot post, comment, or message (monitoring only)</span></li>
+                                                    <li class="mb-2"><i class="fas fa-shield-alt me-2" style="color: var(--cyan);"></i><strong>Privacy:</strong> <span class="text-muted">Your monitoring activities are not visible to students</span></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4 d-flex justify-content-center gap-3 flex-wrap">
+                                        <button class="btn btn-primary btn-lg" onclick="showTab('social-feed')"><i class="fas fa-feed me-2"></i>View Social Feed</button>
+                                        <button class="btn btn-success btn-lg" onclick="showTab('child-activity')"><i class="fas fa-child me-2"></i>Monitor Child Activity</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Social Feed Tab -->
+                            <div class="tab-pane fade" id="social-feed" role="tabpanel">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h4><i class="fas fa-feed me-2"></i>School Social Feed (Read Only)</h4>
+                                    <span class="badge bg-warning">VIEW ONLY</span>
+                                </div>
+                                <div style="max-height: 600px; overflow-y: auto;">
+                                    {% if children_posts %}
+                                        {% for post in children_posts %}
+                                        <div class="p-3 mb-3 rounded" style="background: var(--bg-hover); border: 1px solid var(--border-color); transition: all 0.3s ease;">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <div class="avatar-circle me-3">{{ post.author.full_name[0].upper() }}</div>
+                                                <div class="flex-grow-1">
+                                                    <strong style="color: var(--text-accent);">{{ post.author.full_name }}</strong>
+                                                    {% if post.author in children %}
+                                                        <span class="badge bg-success ms-2">Your Child</span>
+                                                    {% endif %}
+                                                    <br><small class="text-muted"><i class="fas fa-clock me-1"></i>{{ post.date_posted.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                                                </div>
+                                            </div>
+                                            <p class="mb-3" style="color: var(--text-secondary);">{{ post.content }}</p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="d-flex gap-2">
+                                                    <span class="badge bg-danger"><i class="fas fa-heart me-1"></i>{{ post.like_count }} likes</span>
+                                                    <span class="badge bg-info"><i class="fas fa-comment me-1"></i>{{ post.comment_count }} comments</span>
+                                                </div>
+                                                <small class="text-muted">Read-only view</small>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="text-center py-5">
+                                            <i class="fas fa-comments fa-3x mb-3" style="color: var(--text-muted);"></i>
+                                            <h5 style="color: var(--text-secondary);">No Recent Posts</h5>
+                                            <p class="text-muted">There are no recent posts from students.</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Child Activity Tab -->
+                            <div class="tab-pane fade" id="child-activity" role="tabpanel">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h4><i class="fas fa-child me-2"></i>Child Activity Monitoring</h4>
+                                    <span class="badge bg-info">{{ children|length }} Child(ren) Assigned</span>
+                                </div>
+
+                                {% if children %}
+                                    <!-- Activity Chart -->
+                                    <div class="row mb-4">
+                                        <div class="col-12">
+                                            <div class="card" style="border: 1px solid rgba(16, 185, 129, 0.2) !important;">
+                                                <div class="card-header bg-success d-flex justify-content-between align-items-center">
+                                                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Daily Posting Activity (Last 30 Days)</h5>
+                                                    <span class="badge bg-light">Live Analytics</span>
+                                                </div>
+                                                <div class="card-body p-4">
+                                                    <div style="height: 400px; position: relative; width: 100%;">
+                                                        <canvas id="postingChart" style="display: block; width: 100%; height: 100%;"></canvas>
+                                                    </div>
+                                                    <div class="text-center mt-3">
+                                                        <small class="text-muted"><i class="fas fa-info-circle me-1"></i>This graph shows actual posting activity data from your children over the past 30 days</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Stats -->
+                                    <div class="row mb-4">
+                                        <div class="col-md-4">
+                                            <div class="card" style="border: 1px solid rgba(124, 58, 237, 0.2) !important;">
+                                                <div class="card-body text-center">
+                                                    {% set total_posts = 0 %}{% for child in children %}{% set total_posts = total_posts + child.posts|length %}{% endfor %}
+                                                    <div class="h2 mb-2" style="color: var(--violet);">{{ total_posts }}</div>
+                                                    <h6 class="text-muted mb-0">Total Posts</h6>
+                                                    <small class="text-muted">All children combined</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card" style="border: 1px solid rgba(16, 185, 129, 0.2) !important;">
+                                                <div class="card-body text-center">
+                                                    {% set total_messages = 0 %}{% for child in children %}{% set total_messages = total_messages + child.sent_messages|length %}{% endfor %}
+                                                    <div class="h2 mb-2" style="color: var(--emerald);">{{ total_messages }}</div>
+                                                    <h6 class="text-muted mb-0">Messages Sent</h6>
+                                                    <small class="text-muted">Direct & group messages</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card" style="border: 1px solid rgba(245, 158, 11, 0.2) !important;">
+                                                <div class="card-body text-center">
+                                                    {% set total_groups = 0 %}{% for child in children %}{% set total_groups = total_groups + child.groups|length %}{% endfor %}
+                                                    <div class="h2 mb-2" style="color: var(--amber);">{{ total_groups }}</div>
+                                                    <h6 class="text-muted mb-0">Groups Joined</h6>
+                                                    <small class="text-muted">Active group memberships</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Individual Children -->
+                                    <div class="row">
+                                        {% for child in children %}
+                                        <div class="col-lg-6 mb-4">
+                                            <div class="p-4 rounded" style="background: var(--bg-hover); border: 1px solid var(--border-color); transition: all 0.3s ease;">
+                                                <div class="d-flex align-items-center mb-3">
+                                                    <div class="avatar-circle me-3">{{ child.full_name[0].upper() }}</div>
+                                                    <div>
+                                                        <h5 class="mb-1">{{ child.full_name }}</h5>
+                                                        <small class="text-muted">{{ child.grade_level or 'No Grade Assigned' }}</small>
+                                                    </div>
+                                                </div>
+                                                <div class="row text-center mb-3">
+                                                    <div class="col-4">
+                                                        <div class="h4 mb-0" style="color: var(--violet);">{{ child.posts|length }}</div>
+                                                        <small class="text-muted">Total Posts</small>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="h4 mb-0" style="color: var(--emerald);">{{ child.sent_messages|length }}</div>
+                                                        <small class="text-muted">Messages Sent</small>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="h4 mb-0" style="color: var(--amber);">{{ child.groups|length }}</div>
+                                                        <small class="text-muted">Groups Joined</small>
+                                                    </div>
+                                                </div>
+                                                <h6 style="color: var(--text-accent);" class="mb-3">Recent Posts</h6>
+                                                <div style="max-height: 200px; overflow-y: auto;">
+                                                    {% for post in child.posts[:3] %}
+                                                    <div class="mb-2 p-2 rounded" style="background: rgba(15, 23, 42, 0.5); border-left: 3px solid var(--violet);">
+                                                        <p class="mb-1 small" style="color: var(--text-secondary);">{{ post.content|truncate(80) }}</p>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-clock me-1"></i>{{ post.date_posted.strftime('%b %d, %I:%M %p') }}
+                                                            <span class="ms-2"><i class="fas fa-heart" style="color: var(--rose);"></i> {{ post.like_count }} <i class="fas fa-comment ms-1"></i> {{ post.comment_count }}</span>
+                                                        </small>
+                                                    </div>
+                                                    {% else %}
+                                                    <p class="small text-muted">No recent posts</p>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-5">
+                                        <i class="fas fa-child fa-3x mb-3" style="color: var(--text-muted);"></i>
+                                        <h5 style="color: var(--text-secondary);">No Children Assigned</h5>
+                                        <p class="text-muted">Contact an administrator to assign children.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Homework -->
+        {% if children_homework %}
+        <div class="row mb-4 mt-4">
+            <div class="col-12">
+                <div class="card" style="border: 1px solid rgba(244, 63, 94, 0.2) !important;">
+                    <div class="card-header bg-danger"><h5 class="mb-0"><i class="fas fa-book me-2"></i>Upcoming Homework & Assignments</h5></div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead><tr><th>Subject</th><th>Title</th><th>Description</th><th>Due Date</th><th>Grade Level</th></tr></thead>
+                                <tbody>
+                                    {% for homework in children_homework %}
+                                    <tr>
+                                        <td><span class="badge bg-primary">{{ homework.subject }}</span></td>
+                                        <td><strong>{{ homework.title }}</strong></td>
+                                        <td style="color: var(--text-secondary);">{{ homework.description|truncate(80) }}</td>
+                                        <td><span class="badge bg-warning">{{ homework.due_date.strftime('%b %d, %Y') }}</span></td>
+                                        <td>{{ homework.grade_level }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function showTab(tabId) {
+    const tabElement = document.getElementById(tabId + '-tab');
+    const tab = new bootstrap.Tab(tabElement);
+    tab.show();
+    if (tabId === 'child-activity') setTimeout(loadActivityChart, 200);
+}
+
+let chartInstance = null;
+
+function loadActivityChart() {
+    {% if children %}
+    const chartCanvas = document.getElementById('postingChart');
+    if (!chartCanvas) return;
+    if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+    const ctx = chartCanvas.getContext('2d');
+    const datasets = [];
+    let loadedCount = 0;
+    const totalChildren = {{ children|length }};
+    let allLabels = [];
+
+    {% for child in children %}
+    fetch(`/api/child_activity_data/{{ child.id }}`)
+        .then(r => { if (!r.ok) throw new Error('HTTP error'); return r.json(); })
+        .then(data => {
+            const color = getRandomColor({{ loop.index0 }});
+            datasets.push({
+                label: '{{ child.full_name }}', data: data.data,
+                borderColor: color, backgroundColor: color + '20',
+                tension: 0.4, fill: false, pointRadius: 5, pointHoverRadius: 8,
+                pointBackgroundColor: color, pointBorderColor: '#0f172a', pointBorderWidth: 2, borderWidth: 3
+            });
+            if (allLabels.length === 0) allLabels = data.labels;
+            loadedCount++;
+            if (loadedCount === totalChildren && datasets.length > 0) chartInstance = createChart(ctx, allLabels, datasets);
+        })
+        .catch(e => { console.error('Error:', e); loadedCount++; if (loadedCount === totalChildren && datasets.length > 0) chartInstance = createChart(ctx, allLabels, datasets); });
+    {% endfor %}
+    {% endif %}
+}
+
+function getRandomColor(index) {
+    const colors = ['#7c3aed', '#10b981', '#f59e0b', '#f43f5e', '#3b82f6', '#06b6d4', '#f97316', '#84cc16'];
+    return colors[index % colors.length];
+}
+
+function createChart(ctx, labels, datasets) {
+    return new Chart(ctx, {
+        type: 'line',
+        data: { labels: labels, datasets: datasets },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            animation: { duration: 1000, easing: 'easeInOutQuart' },
+            plugins: {
+                title: { display: false },
+                legend: { display: datasets.length > 1, position: 'top', labels: { usePointStyle: true, padding: 20, color: '#94a3b8', font: { size: 13 } } },
+                tooltip: { backgroundColor: 'rgba(30, 41, 59, 0.95)', titleColor: '#f1f5f9', bodyColor: '#94a3b8', borderColor: '#7c3aed', borderWidth: 1, cornerRadius: 8, displayColors: true, mode: 'index', intersect: false }
+            },
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1, color: '#64748b', callback: v => Number.isInteger(v) ? v : null }, title: { display: true, text: 'Number of Posts', color: '#94a3b8', font: { size: 13 } }, grid: { color: 'rgba(148,163,184,0.08)' } },
+                x: { ticks: { maxTicksLimit: 10, color: '#64748b' }, title: { display: true, text: 'Date (Last 30 Days)', color: '#94a3b8', font: { size: 13 } }, grid: { color: 'rgba(148,163,184,0.08)' } }
+            }
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const tab = document.getElementById('child-activity');
+    if (tab && tab.classList.contains('active')) setTimeout(loadActivityChart, 500);
+    document.getElementById('child-activity-tab')?.addEventListener('click', () => setTimeout(loadActivityChart, 300));
+});
+</script>
+
+<style>
+.tab-content { min-height: 400px; }
+</style>
+{% endblock %}

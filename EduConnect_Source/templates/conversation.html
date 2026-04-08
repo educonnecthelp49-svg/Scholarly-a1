@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}Chat with {{ other_user.full_name }} — EduConnect{% endblock %}
+
+{% block content %}
+<div class="row h-100">
+    <div class="col-12">
+        <!-- Chat Header -->
+        <div class="card mb-3" style="border: 1px solid rgba(124, 58, 237, 0.15) !important;">
+            <div class="card-body py-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <a href="{{ url_for('messages') }}" class="btn btn-sm btn-outline-secondary me-3">
+                            <i class="fas fa-arrow-left"></i>
+                        </a>
+                        <div class="avatar-circle me-3">
+                            {{ other_user.full_name[0].upper() }}
+                        </div>
+                        <div>
+                            <h5 class="mb-0 fw-bold" style="font-size: 1.05rem;">
+                                {{ other_user.full_name }}
+                                {% if other_user.is_prefect %}
+                                    <i class="fas fa-star ms-1" style="color: var(--amber); font-size: 0.8rem;"></i>
+                                {% endif %}
+                            </h5>
+                            <small class="text-muted">@{{ other_user.username }}</small>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('view_user_profile', username=other_user.username) }}"
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-user me-1"></i>View Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages Container -->
+        <div class="card mb-3" style="height: 65vh; min-height: 450px; border: 1px solid var(--glass-border) !important;">
+            <div class="card-body overflow-auto p-3" id="messagesContainer" style="scroll-behavior: smooth; background: linear-gradient(180deg, rgba(10,14,26,0.5) 0%, transparent 100%);">
+                {% if messages %}
+                    {% for message in messages %}
+                        {% if message.sender_id == session.user_id %}
+                            <!-- Sent message -->
+                            <div class="d-flex justify-content-end mb-3 message-item" style="animation: fadeInUp 0.3s ease;">
+                                <div class="position-relative">
+                                    <div class="p-3 rounded-3" style="max-width: 320px; min-width: 150px; background: var(--gradient-accent); color: white; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);">
+                                        <div class="dropdown position-absolute" style="top: 5px; right: 5px;">
+                                            <button class="btn btn-sm btn-link text-white p-0" type="button" data-bs-toggle="dropdown" style="opacity: 0.7;">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><a class="dropdown-item" href="#" onclick="editMessage({{ message.id }}, 'direct')"><i class="fas fa-edit me-2"></i>Edit</a></li>
+                                                <li><a class="dropdown-item text-danger" href="#" onclick="deleteMessage({{ message.id }}, 'direct')"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                                            </ul>
+                                        </div>
+                                        <p class="mb-1" id="message-content-{{ message.id }}">{{ message.content }}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="opacity-75" style="font-size: 0.75rem;">
+                                                {{ message.date_sent.strftime('%I:%M %p') }}
+                                                {% if message.is_edited %}<span class="ms-1">(edited)</span>{% endif %}
+                                            </small>
+                                            <i class="fas fa-check-double opacity-75" style="font-size: 0.7em;"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <!-- Received message -->
+                            <div class="d-flex justify-content-start mb-3 message-item" style="animation: fadeInUp 0.3s ease;">
+                                <div class="avatar-circle-sm me-2 flex-shrink-0">
+                                    {{ other_user.full_name[0].upper() }}
+                                </div>
+                                <div class="position-relative">
+                                    {% if (current_user.is_prefect or current_user.is_teacher) and current_user.can_report_or_delete_user(message.sender) %}
+                                    <div class="dropdown position-absolute" style="top: 5px; right: 5px; z-index: 10;">
+                                        <button class="btn btn-sm btn-link p-0" type="button" data-bs-toggle="dropdown" style="opacity: 0.5; color: var(--text-muted);">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" style="color: var(--amber);" href="#" onclick="reportContent('direct_message', {{ message.id }})"><i class="fas fa-flag me-2"></i>Report Message</a></li>
+                                        </ul>
+                                    </div>
+                                    {% endif %}
+                                    <div class="p-3 rounded-3" style="max-width: 320px; min-width: 150px; background: var(--bg-secondary); border: 1px solid var(--border-color);">
+                                        <p class="mb-1" id="message-content-{{ message.id }}" style="color: var(--text-secondary);">{{ message.content }}</p>
+                                        <small class="text-muted" style="font-size: 0.75rem;">
+                                            {{ message.date_sent.strftime('%I:%M %p') }}
+                                            {% if message.is_edited %}<span class="ms-1">(edited)</span>{% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-comment-dots fa-3x mb-3" style="color: var(--text-muted);"></i>
+                        <h5 style="color: var(--text-secondary);">Start the conversation!</h5>
+                        <p class="text-muted">Send a message to {{ other_user.full_name }} below.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Message Input -->
+        <div class="card" style="border: 1px solid rgba(124, 58, 237, 0.15) !important;">
+            <div class="card-body p-3">
+                <form method="POST" action="{{ url_for('send_message', username=other_user.username) }}" id="messageForm">
+                    <div class="input-group">
+                        <input type="text" class="form-control rounded-pill" name="content" id="messageInput"
+                               placeholder="Type a message..." required autofocus
+                               style="padding: 12px 20px; border: 1px solid var(--border-color);">
+                        <button type="submit" class="btn btn-primary rounded-circle ms-2 no-loading" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function editMessage(messageId, type) {
+    const content = document.getElementById('message-content-' + messageId).textContent;
+    const newContent = prompt('Edit your message:', content);
+    if (newContent && newContent.trim() !== '' && newContent !== content) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = type === 'direct' ? `/edit_message/${messageId}` : `/edit_group_message/${messageId}`;
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'content';
+        input.value = newContent;
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function deleteMessage(messageId, type) {
+    if (confirm('Are you sure you want to delete this message?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = type === 'direct' ? `/delete_message/${messageId}` : `/delete_group_message/${messageId}`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function scrollToBottom() {
+    const messagesContainer = document.getElementById('messagesContainer');
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    scrollToBottom();
+    document.getElementById('messageInput').focus();
+
+    let lastMessageTimestamp = 0;
+    const otherUsername = '{{ other_user.username }}';
+    const existingMessages = document.querySelectorAll('[id^="message-content-"]');
+    if (existingMessages.length > 0) {
+        lastMessageTimestamp = Date.now() / 1000;
+    }
+
+    const messageForm = document.getElementById('messageForm');
+    const messageInput = document.getElementById('messageInput');
+
+    messageForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const content = messageInput.value.trim();
+        if (!content) return;
+
+        const submitBtn = messageForm.querySelector('button[type="submit"]');
+        const originalBtnContent = submitBtn.innerHTML;
+        messageForm.style.opacity = '0.7';
+        messageInput.disabled = true;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loading"></span>';
+
+        fetch(`/api/send_message/${otherUsername}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ content: content }),
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                addMessageToChat(data.message);
+                messageInput.value = '';
+                lastMessageTimestamp = data.message.timestamp;
+                scrollToBottom();
+            } else {
+                alert('Error sending message: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => { console.error('Error:', error); alert('Error sending message.'); })
+        .finally(() => {
+            messageForm.style.opacity = '1';
+            messageInput.disabled = false;
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnContent;
+            messageInput.focus();
+        });
+    });
+
+    setInterval(function() {
+        fetch(`/api/messages/${otherUsername}?since=${lastMessageTimestamp}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.messages && data.messages.length > 0) {
+                    data.messages.forEach(message => {
+                        addMessageToChat(message);
+                        lastMessageTimestamp = Math.max(lastMessageTimestamp, message.timestamp);
+                    });
+                    scrollToBottom();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }, 2000);
+
+    function addMessageToChat(message) {
+        if (document.getElementById('message-content-' + message.id)) return;
+        const isSent = message.sender_id === {{ session.user_id|tojson }};
+        const messagesContainer = document.getElementById('messagesContainer');
+        const div = document.createElement('div');
+        div.className = isSent ? 'd-flex justify-content-end mb-3 message-item' : 'd-flex justify-content-start mb-3 message-item';
+        div.style.animation = 'fadeInUp 0.3s ease';
+        div.innerHTML = isSent ? `
+            <div class="position-relative">
+                <div class="p-3 rounded-3" style="max-width: 320px; min-width: 150px; background: var(--gradient-accent); color: white; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);">
+                    <div class="dropdown position-absolute" style="top: 5px; right: 5px;">
+                        <button class="btn btn-sm btn-link text-white p-0" type="button" data-bs-toggle="dropdown" style="opacity: 0.7;"><i class="fas fa-ellipsis-v"></i></button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="editMessage(${message.id}, 'direct')"><i class="fas fa-edit me-2"></i>Edit</a></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteMessage(${message.id}, 'direct')"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                        </ul>
+                    </div>
+                    <p class="mb-1" id="message-content-${message.id}">${message.content}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="opacity-75" style="font-size: 0.75rem;">${message.formatted_time}${message.is_edited ? ' <span>(edited)</span>' : ''}</small>
+                        <i class="fas fa-check-double opacity-75" style="font-size: 0.7em;"></i>
+                    </div>
+                </div>
+            </div>
+        ` : `
+            <div class="avatar-circle-sm me-2 flex-shrink-0">{{ other_user.full_name[0].upper() }}</div>
+            <div class="position-relative">
+                <div class="p-3 rounded-3" style="max-width: 320px; min-width: 150px; background: var(--bg-secondary); border: 1px solid var(--border-color);">
+                    <p class="mb-1" id="message-content-${message.id}" style="color: var(--text-secondary);">${message.content}</p>
+                    <small class="text-muted" style="font-size: 0.75rem;">${message.formatted_time}${message.is_edited ? ' <span>(edited)</span>' : ''}</small>
+                </div>
+            </div>
+        `;
+        messagesContainer.appendChild(div);
+    }
+
+    messageInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            messageForm.dispatchEvent(new Event('submit'));
+        }
+    });
+});
+
+function reportContent(contentType, contentId) {
+    document.getElementById('reportContentType').value = contentType;
+    document.getElementById('reportContentId').value = contentId;
+    document.getElementById('reportJustification').value = '';
+    var modal = new bootstrap.Modal(document.getElementById('reportModal'));
+    modal.show();
+}
+</script>
+
+<!-- Report Content Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-flag me-2" style="color: var(--amber);"></i>Report Inappropriate Content
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('report_content') }}">
+                <div class="modal-body">
+                    <div class="alert alert-light">
+                        <i class="fas fa-info-circle me-2" style="color: var(--cyan);"></i>
+                        Report inappropriate content for admin review. Please provide a clear justification.
+                    </div>
+                    <input type="hidden" id="reportContentType" name="content_type">
+                    <input type="hidden" id="reportContentId" name="content_id">
+                    <div class="mb-3">
+                        <label class="form-label">Justification for reporting:</label>
+                        <textarea class="form-control" id="reportJustification" name="justification" rows="4"
+                                  placeholder="Please explain why this content is inappropriate..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning"><i class="fas fa-flag me-1"></i>Submit Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

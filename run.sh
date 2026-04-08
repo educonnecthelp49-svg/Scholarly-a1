@@ -1,0 +1,1 @@
+source venv/bin/activate && python EduConnect_Source/app.py

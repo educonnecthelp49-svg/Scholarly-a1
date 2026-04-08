@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Profile — EduConnect{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+    <!-- Welcome Message -->
+    <h1 class="profile-greeting">Welcome back, {{ user.username }}!</h1>
+
+    <!-- Profile Card -->
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="avatar-circle-lg">
+                {{ user.full_name[0].upper() if user.full_name else user.username[0].upper() }}
+            </div>
+            <div class="profile-info">
+                <h2 class="profile-name">{{ user.full_name or user.username }}</h2>
+                <span class="profile-role {% if user.is_admin %}admin{% endif %}">
+                    {% if user.is_admin %}Administrator{% elif user.is_teacher %}Teacher{% elif user.is_prefect %}Prefect{% else %}Student{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <div class="profile-details">
+            <div class="detail-row">
+                <span class="detail-label">User ID</span>
+                <span class="detail-value">#{{ user.id }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Email</span>
+                <span class="detail-value">{{ user.email or '—' }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Role</span>
+                <span class="detail-value">
+                    {% if user.is_admin %}Admin{% elif user.is_teacher %}Teacher{% elif user.is_prefect %}Prefect{% else %}Student{% endif %}
+                </span>
+            </div>
+            {% if user.grade_level %}
+            <div class="detail-row">
+                <span class="detail-label">Grade</span>
+                <span class="detail-value">Grade {{ user.grade_level }}{% if user.section %}{{ user.section }}{% endif %}</span>
+            </div>
+            {% endif %}
+            <div class="detail-row">
+                <span class="detail-label">Permissions</span>
+                <span class="detail-value">{% if user.is_admin %}All (Administrator){% else %}Standard{% endif %}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Status</span>
+                <span class="detail-value status-active">Active</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Member Since</span>
+                <span class="detail-value">{{ user.date_created.strftime('%B %d, %Y') }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="profile-actions">
+        <a href="{{ url_for('edit_profile') }}" class="btn btn-secondary">
+            Edit Profile
+        </a>
+        {% if user.is_admin %}
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary">
+            Manage
+        </a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}" class="btn btn-danger">
+            Log Out
+        </a>
+    </div>
+</div>
+
+<style>
+    .profile-page {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .profile-greeting {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--blue);
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .profile-card {
+        background: var(--white);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 1rem;
+    }
+
+    .profile-info {
+        flex: 1;
+    }
+
+    .profile-name {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin: 0 0 0.25rem 0;
+    }
+
+    .profile-role {
+        display: inline-block;
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: var(--radius-full);
+        background: rgba(28, 176, 246, 0.1);
+        color: var(--blue);
+    }
+
+    .profile-role.admin {
+        background: rgba(255, 75, 75, 0.1);
+        color: var(--red);
+    }
+
+    .profile-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+    }
+
+    .detail-label {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .detail-value {
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .status-active {
+        color: var(--green) !important;
+    }
+
+    .status-inactive {
+        color: var(--red) !important;
+    }
+
+    .profile-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+    }
+
+    .profile-actions .btn {
+        flex: 1;
+        max-width: 150px;
+        text-align: center;
+    }
+</style>
+{% endblock %}

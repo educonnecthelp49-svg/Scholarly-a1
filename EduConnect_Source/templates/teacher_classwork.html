@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Classwork Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-file-pdf text-primary me-2"></i>Classwork Management</h2>
+                <div class="d-flex gap-2">
+                    <!-- Subject Filter -->
+                    <select class="form-select" style="width: 200px;" onchange="filterBySubject(this.value)">
+                        {% for subject in subjects %}
+                        <option value="{{ subject.lower() }}" {% if current_subject == subject.lower() %}selected{% endif %}>
+                            {{ subject }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                        <i class="fas fa-upload me-2"></i>Upload New PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Upload Modal -->
+            <div class="modal fade" id="uploadModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Upload Classwork PDF</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form method="POST" action="{{ url_for('upload_classwork') }}" enctype="multipart/form-data">
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Title</label>
+                                    <input type="text" class="form-control" name="title" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="subject" class="form-label">Subject</label>
+                                    <select class="form-select" name="subject" required>
+                                        <option value="">Select Subject</option>
+                                        <option value="Hindi">Hindi</option>
+                                        <option value="Maths">Maths</option>
+                                        <option value="Science">Science</option>
+                                        <option value="French">French</option>
+                                        <option value="Sanskrit">Sanskrit</option>
+                                        <option value="German">German</option>
+                                        <option value="SST">SST</option>
+                                        <option value="Computer">Computer</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Grade and Section Targeting -->
+                                <div class="mb-3">
+                                    <label class="form-label">Target Grades</label>
+                                    <div class="row">
+                                        {% for grade in ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'] %}
+                                        <div class="col-md-3 col-sm-4 col-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="target_grades" value="{{ grade }}" id="grade{{ loop.index }}">
+                                                <label class="form-check-label" for="grade{{ loop.index }}">{{ grade }}</label>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <small class="text-muted">Leave empty to make visible to all grades</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Target Sections</label>
+                                    <div class="row">
+                                        {% for section in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'] %}
+                                        <div class="col-md-2 col-sm-3 col-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="target_sections" value="{{ section }}" id="section{{ section }}">
+                                                <label class="form-check-label" for="section{{ section }}">{{ section }}</label>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <small class="text-muted">Leave empty to include all sections of selected grades</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description (Optional)</label>
+                                    <textarea class="form-control" name="description" rows="3"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="pdf_file" class="form-label">PDF File</label>
+                                    <input type="file" class="form-control" name="pdf_file" accept=".pdf" required>
+                                    <div class="form-text">Only PDF files are allowed (max 50MB).</div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Upload</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Classwork List -->
+            {% if classworks %}
+            <div class="row">
+                {% for cw in classworks %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ cw.title }}</h5>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                {% if cw.subject %}
+                                <span class="badge bg-primary">{{ cw.subject }}</span>
+                                {% endif %}
+                                {% if cw.get_target_grades() %}
+                                <small class="text-muted">
+                                    <i class="fas fa-users me-1"></i>
+                                    {% for grade in cw.get_target_grades() %}{{ grade }}{% if not loop.last %}, {% endif %}{% endfor %}
+                                    {% if cw.get_target_sections() %}
+                                    ({{ cw.get_target_sections()|join(', ') }})
+                                    {% endif %}
+                                </small>
+                                {% endif %}
+                            </div>
+                            {% if cw.description %}
+                            <p class="card-text">{{ cw.description }}</p>
+                            {% endif %}
+                            <div class="text-muted small mb-3">
+                                <div><i class="fas fa-calendar me-1"></i>{{ cw.upload_date.strftime('%B %d, %Y at %I:%M %p') }}</div>
+                                <div><i class="fas fa-file me-1"></i>{{ cw.file_size_mb }} MB</div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('download_classwork', classwork_id=cw.id) }}" 
+                                   class="btn btn-outline-primary btn-sm flex-fill">
+                                    <i class="fas fa-download me-1"></i>Download
+                                </a>
+                                <button class="btn btn-outline-secondary btn-sm" 
+                                        onclick="viewPDF('{{ cw.filename }}', {{ cw.id }})">
+                                    <i class="fas fa-eye me-1"></i>View
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-file-pdf fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No Classwork Uploaded Yet</h4>
+                <p class="text-muted">Upload your first PDF to get started!</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                    <i class="fas fa-upload me-2"></i>Upload PDF
+                </button>
+            </div>
+            {% endif %}
+
+            <!-- PDF Viewer Modal -->
+            <div class="modal fade" id="pdfViewerModal" tabindex="-1">
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="pdfViewerTitle">PDF Viewer</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-0">
+                            <iframe id="pdfViewer" style="width: 100%; height: 70vh;" frameborder="0"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewPDF(filename, classworkId) {
+    // For now, we'll download the PDF as viewing requires additional setup
+    // In a production environment, you'd set up PDF.js or similar
+    window.location.href = '{{ url_for("download_classwork", classwork_id=0) }}'.replace('0', classworkId);
+}
+
+function filterBySubject(subject) {
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.set('subject', subject);
+    window.location = currentUrl;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Lost & Found - School Social Platform{% endblock %}
+
+{% block content %}
+<style>
+    /* Duolingo-style Lost & Found page */
+    .lost-card {
+        border: 2px solid var(--border-color) !important;
+        border-radius: var(--radius-lg) !important;
+        overflow: hidden;
+    }
+    
+    .lost-card.border-warning {
+        border-color: var(--orange) !important;
+    }
+    
+    .lost-card.border-success {
+        border-color: var(--green) !important;
+    }
+    
+    .lost-card .card-header {
+        border-radius: 0 !important;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .lost-card .card-body {
+        background: var(--white);
+    }
+    
+    .lost-card .card-footer {
+        background: var(--bg-secondary) !important;
+        border-top: 2px solid var(--border-color) !important;
+        padding: 1rem !important;
+    }
+    
+    .lost-card .card-title {
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    
+    .lost-card .card-text {
+        color: var(--text-secondary);
+    }
+    
+    /* Mark as found button - chunky Duolingo style */
+    .btn-mark-found {
+        background: var(--green) !important;
+        box-shadow: 0 4px 0 var(--green-dark) !important;
+        border: none !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        padding: 12px 20px !important;
+        border-radius: var(--radius-md) !important;
+    }
+    
+    .btn-mark-found:hover {
+        background: var(--green) !important;
+        transform: translateY(2px);
+        box-shadow: 0 2px 0 var(--green-dark) !important;
+    }
+    
+    .btn-mark-found:active {
+        transform: translateY(4px);
+        box-shadow: none !important;
+    }
+    
+    /* Contact info box */
+    .contact-box {
+        background: rgba(28, 176, 246, 0.1) !important;
+        border: 2px solid rgba(28, 176, 246, 0.2) !important;
+        border-left: 4px solid var(--blue) !important;
+        border-radius: var(--radius-sm) !important;
+    }
+    
+    /* Found info box */
+    .found-box {
+        background: rgba(88, 204, 2, 0.1) !important;
+        border: 2px solid rgba(88, 204, 2, 0.2) !important;
+        border-left: 4px solid var(--green) !important;
+        border-radius: var(--radius-sm) !important;
+    }
+    
+    /* Page title */
+    .page-title {
+        color: var(--blue) !important;
+        font-weight: 800 !important;
+    }
+    
+    /* Search input */
+    #itemSearch {
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-md);
+        font-weight: 500;
+    }
+    
+    #itemSearch:focus {
+        border-color: var(--blue);
+        box-shadow: none;
+    }
+</style>
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 fw-bold page-title">
+                <i class="fas fa-search me-2"></i>Lost & Found
+            </h1>
+            <div class="d-flex gap-2">
+                <div class="input-group" style="width: 250px;">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="itemSearch" placeholder="Search items...">
+                </div>
+                <a href="{{ url_for('report_lost_item') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Report Lost Item
+                </a>
+            </div>
+        </div>
+        
+        <div class="alert alert-info mb-4">
+            <i class="fas fa-info-circle me-2"></i>
+            Found something? Contact the person who reported it using the information below. 
+            {% if session.is_admin %}
+                <strong>As an admin, you can mark items as found.</strong>
+            {% endif %}
+        </div>
+        
+        {% if items %}
+            <div class="row">
+                {% for item in items %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 lost-card {% if item.is_found %}border-success{% else %}border-warning{% endif %}">
+                        <div class="card-header bg-{% if item.is_found %}success{% else %}warning{% endif %} text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-{% if item.is_found %}check-circle{% else %}exclamation-triangle{% endif %} me-1"></i>
+                                    {% if item.is_found %}FOUND{% else %}LOST{% endif %}
+                                </h6>
+                                <small>{{ item.date_reported.strftime('%b %d, %Y') }}</small>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ item.item_name }}</h5>
+                            <p class="card-text">{{ item.description }}</p>
+                            
+                            <div class="row text-center mb-3">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Lost at:</small>
+                                    <strong>{{ item.location_lost }}</strong>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Date lost:</small>
+                                    <strong>{{ item.date_lost.strftime('%b %d, %Y') }}</strong>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center mb-3">
+                                <div class="avatar-circle-sm d-inline-block me-2">
+                                    {{ item.user.full_name[0].upper() }}
+                                </div>
+                                <div class="d-inline-block">
+                                    <strong>{{ item.user.full_name }}</strong>
+                                    {% if item.user.is_prefect %}
+                                        <i class="fas fa-star text-warning ms-1" title="Prefect"></i>
+                                    {% endif %}
+                                    <br>
+                                    <small class="text-muted">@{{ item.user.username }}</small>
+                                </div>
+                            </div>
+                            
+                            {% if item.contact_info %}
+                                <div class="alert contact-box p-2 mb-2">
+                                    <small><strong>Contact:</strong> {{ item.contact_info }}</small>
+                                </div>
+                            {% endif %}
+                            
+                            {% if item.is_found %}
+                                <div class="alert found-box p-2 mb-0">
+                                    <small>
+                                        <strong>Found at:</strong> {{ item.found_location }}<br>
+                                        <strong>Found on:</strong> {{ item.found_date.strftime('%b %d, %Y') }}<br>
+                                        <strong>Marked by:</strong> {{ item.found_by_admin.full_name }}
+                                    </small>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if session.is_admin and not item.is_found %}
+                        <div class="card-footer">
+                            <button class="btn btn-mark-found w-100" data-bs-toggle="modal" data-bs-target="#markFoundModal{{ item.id }}">
+                                <i class="fas fa-check me-1"></i>Mark as Found
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Mark as Found Modal for Admin -->
+                {% if session.is_admin and not item.is_found %}
+                <div class="modal fade" id="markFoundModal{{ item.id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title fw-bold">Mark "{{ item.item_name }}" as Found</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form method="POST" action="{{ url_for('mark_as_found', item_id=item.id) }}">
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label for="found_location{{ item.id }}" class="form-label fw-bold">Where was it found?</label>
+                                        <input type="text" class="form-control" id="found_location{{ item.id }}" name="found_location" 
+                                               placeholder="e.g., Main Office, Cafeteria, Classroom 101" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="found_date{{ item.id }}" class="form-label fw-bold">When was it found?</label>
+                                        <input type="date" class="form-control" id="found_date{{ item.id }}" name="found_date" required>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-success">Mark as Found</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-search fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">No lost items reported</h4>
+                    <p class="text-muted">Be the first to report a lost item to help your classmates!</p>
+                    <a href="{{ url_for('report_lost_item') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Report Lost Item
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Set today's date as default for found date
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    const foundDateInputs = document.querySelectorAll('input[name="found_date"]');
+    foundDateInputs.forEach(input => {
+        input.value = today;
+    });
+    
+    // Item search functionality
+    const searchInput = document.getElementById('itemSearch');
+    const itemCards = document.querySelectorAll('.col-md-6.col-lg-4.mb-4');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            
+            itemCards.forEach(function(card) {
+                const itemName = card.querySelector('.card-title').textContent.toLowerCase();
+                const description = card.querySelector('.card-text').textContent.toLowerCase();
+                const location = card.querySelector('.row.text-center strong').textContent.toLowerCase();
+                const ownerName = card.querySelector('.d-inline-block strong').textContent.toLowerCase();
+                
+                const matches = itemName.includes(searchTerm) || 
+                              description.includes(searchTerm) ||
+                              location.includes(searchTerm) ||
+                              ownerName.includes(searchTerm);
+                
+                card.style.display = matches ? '' : 'none';
+            });
+        });
+    }
+    
+    // Fix for modal backdrop not being removed
+    document.querySelectorAll('.modal').forEach(function(modal) {
+        modal.addEventListener('hidden.bs.modal', function() {
+            // Remove any lingering backdrops
+            document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
+                backdrop.remove();
+            });
+            // Remove modal-open class from body
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    });
+});
+</script>
+{% endblock %}

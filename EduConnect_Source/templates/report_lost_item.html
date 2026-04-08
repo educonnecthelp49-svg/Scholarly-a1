@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Report Lost Item - School Social Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0 text-primary">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Report Lost Item
+                </h3>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    Fill out the form below to report your lost item. Other students and staff will be able to see your report and contact you if they find your item.
+                </p>
+                
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="item_name" class="form-label">Item Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="item_name" name="item_name" 
+                               placeholder="e.g., iPhone 13, Blue backpack, Calculator" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="description" name="description" rows="3" 
+                                  placeholder="Provide a detailed description including color, brand, distinctive features, contents, etc." required></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="location_lost" class="form-label">Location Lost <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="location_lost" name="location_lost" 
+                                       placeholder="e.g., Cafeteria, Gym, Classroom 205" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="date_lost" class="form-label">Date Lost <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="date_lost" name="date_lost" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="contact_info" class="form-label">Contact Information</label>
+                        <input type="text" class="form-control" id="contact_info" name="contact_info" 
+                               placeholder="e.g., Room 301, Phone: 555-0123, Email: yourname@school.edu (optional)">
+                        <div class="form-text">
+                            Optional: Provide additional ways for people to contact you besides direct messages.
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> Your name and username will be visible to all students so they can contact you if they find your item.
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('lost_and_found') }}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-arrow-left me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Report Lost Item
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set max date to today
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date_lost').max = today;
+    document.getElementById('date_lost').value = today;
+});
+</script>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Circulars{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-bullhorn text-warning me-2"></i>School Circulars</h2>
+                <div class="text-muted">
+                    <small>Official announcements and notices</small>
+                </div>
+            </div>
+
+            <!-- Circulars List -->
+            {% if circulars %}
+            <div class="row">
+                {% for circular in circulars %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 {% if circular.priority == 'High' %}border-danger{% elif circular.priority == 'Low' %}border-secondary{% endif %}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title">{{ circular.title }}</h5>
+                                {% if circular.priority == 'High' %}
+                                <span class="badge bg-danger">High Priority</span>
+                                {% elif circular.priority == 'Low' %}
+                                <span class="badge bg-secondary">Low Priority</span>
+                                {% else %}
+                                <span class="badge bg-primary">Normal</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge bg-info">{{ circular.category }}</span>
+                                <small class="text-muted">by {{ circular.created_by.full_name }}</small>
+                            </div>
+                            
+                            <p class="card-text">{{ circular.content[:150] }}{% if circular.content|length > 150 %}...{% endif %}</p>
+                            
+                            <div class="text-muted small mb-3">
+                                <div><i class="fas fa-calendar me-1"></i>{{ circular.date_published.strftime('%B %d, %Y') }}</div>
+                                {% if circular.expires_on %}
+                                <div><i class="fas fa-clock me-1"></i>Expires: {{ circular.expires_on.strftime('%B %d, %Y') }}</div>
+                                {% endif %}
+                                {% if circular.attachment_filename %}
+                                <div><i class="fas fa-paperclip me-1"></i>{{ circular.attachment_filename }} ({{ circular.attachment_size_mb }} MB)</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary btn-sm flex-fill" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#viewCircularModal{{ circular.id }}">
+                                    <i class="fas fa-eye me-1"></i>Read Full
+                                </button>
+                                {% if circular.attachment_filename %}
+                                <a href="{{ url_for('download_circular_attachment', circular_id=circular.id) }}" 
+                                   class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-download me-1"></i>Download
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Circular Details Modal -->
+                <div class="modal fade" id="viewCircularModal{{ circular.id }}" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">{{ circular.title }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="d-flex gap-2 mb-3">
+                                    <span class="badge bg-info">{{ circular.category }}</span>
+                                    {% if circular.priority == 'High' %}
+                                    <span class="badge bg-danger">High Priority</span>
+                                    {% elif circular.priority == 'Low' %}
+                                    <span class="badge bg-secondary">Low Priority</span>
+                                    {% else %}
+                                    <span class="badge bg-primary">Normal Priority</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <p><strong>Published by:</strong> {{ circular.created_by.full_name }}</p>
+                                <p><strong>Date:</strong> {{ circular.date_published.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                                {% if circular.expires_on %}
+                                <p><strong>Expires:</strong> {{ circular.expires_on.strftime('%B %d, %Y') }}</p>
+                                {% endif %}
+                                
+                                <h6>Content:</h6>
+                                <div class="bg-light p-3 rounded">
+                                    {{ circular.content.replace('\n', '<br>')|safe }}
+                                </div>
+                                
+                                {% if circular.attachment_filename %}
+                                <h6 class="mt-3">Attachment:</h6>
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fas fa-file"></i>
+                                    <span>{{ circular.attachment_filename }} ({{ circular.attachment_size_mb }} MB)</span>
+                                    <a href="{{ url_for('download_circular_attachment', circular_id=circular.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-download"></i> Download
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-bullhorn fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No Circulars Available</h4>
+                <p class="text-muted">There are no active circulars at the moment.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

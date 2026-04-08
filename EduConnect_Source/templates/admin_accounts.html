@@ -1,0 +1,587 @@
+{% extends "base.html" %}
+
+{% block title %}Account Management - School Social Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 fw-bold text-primary">
+                <i class="fas fa-users-cog me-2"></i>Account Management
+            </h1>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+        
+        <!-- User Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-users fa-2x me-3"></i>
+                            <div>
+                                <h4 class="mb-0">{{ user_stats|length }}</h4>
+                                <p class="mb-0">Total Users</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-user-graduate fa-2x me-3"></i>
+                            <div>
+                                <h4 class="mb-0">{{ user_stats|selectattr('0.is_admin', 'equalto', false)|list|length }}</h4>
+                                <p class="mb-0">Students</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-star fa-2x me-3"></i>
+                            <div>
+                                <h4 class="mb-0">{{ user_stats|selectattr('0.is_prefect', 'equalto', true)|list|length }}</h4>
+                                <p class="mb-0">Prefects</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-secondary text-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-chalkboard-teacher fa-2x me-3"></i>
+                            <div>
+                                <h4 class="mb-0">{{ user_stats|selectattr('0.is_teacher', 'equalto', true)|list|length }}</h4>
+                                <p class="mb-0">Teachers</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Additional Stats Row -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-user-shield fa-2x me-3"></i>
+                            <div>
+                                <h4 class="mb-0">{{ user_stats|selectattr('0.is_admin', 'equalto', true)|list|length }}</h4>
+                                <p class="mb-0">Admins</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Create Account Form -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>Create New Account
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('create_account') }}">
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="account_type" class="form-label">Account Type</label>
+                            <select class="form-select" id="account_type" name="account_type" required onchange="toggleAccountFields()">
+                                <option value="">Select Account Type</option>
+                                <option value="student">Student</option>
+                                <option value="teacher">Teacher</option>
+                                <option value="parent">Parent</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="full_name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="full_name" name="full_name" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="confirm_password" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Student Fields -->
+                    <div id="student-fields" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="grade_level" class="form-label">Grade Level</label>
+                                <select class="form-select" id="grade_level" name="grade_level">
+                                <option value="">Select Grade</option>
+                                <option value="Nursery">Nursery</option>
+                                <option value="Reception">Reception</option>
+                                <option value="1">Grade 1</option>
+                                <option value="2">Grade 2</option>
+                                <option value="3">Grade 3</option>
+                                <option value="4">Grade 4</option>
+                                <option value="5">Grade 5</option>
+                                <option value="6">Grade 6</option>
+                                <option value="7">Grade 7</option>
+                                <option value="8">Grade 8</option>
+                                <option value="9">Grade 9</option>
+                                <option value="10">Grade 10</option>
+                                <option value="11">Grade 11</option>
+                                <option value="12">Grade 12</option>
+                            </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="section" class="form-label">Section</label>
+                                <select class="form-select" id="section" name="section">
+                                    <option value="">Select Section</option>
+                                    <option value="A">Section A</option>
+                                    <option value="B">Section B</option>
+                                    <option value="C">Section C</option>
+                                    <option value="D">Section D</option>
+                                    <option value="E">Section E</option>
+                                    <option value="F">Section F</option>
+                                    <option value="G">Section G</option>
+                                    <option value="H">Section H</option>
+                                    <option value="I">Section I</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="house" class="form-label">House (Optional)</label>
+                                <select class="form-select" id="house" name="house">
+                                    <option value="">No House (Regular Student)</option>
+                                    <option value="St. Patrick">St. Patrick (Green)</option>
+                                    <option value="St. Raphael">St. Raphael (Yellow)</option>
+                                    <option value="St. Nicolas">St. Nicolas (Orange)</option>
+                                    <option value="St. Michael">St. Michael (Blue)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_prefect" name="is_prefect">
+                                    <label class="form-check-label fw-bold" for="is_prefect">
+                                        <span class="badge bg-warning text-dark me-2">PREFECT</span>
+                                        Mark as Prefect (requires house selection)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Teacher Fields -->
+                    <div id="teacher-fields" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="subject_taught" class="form-label">Subject Taught</label>
+                                <input type="text" class="form-control" id="subject_taught" name="subject_taught" placeholder="e.g., Mathematics, English, Science">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_class_teacher" name="is_class_teacher" onchange="toggleClassTeacherFields()">
+                                    <label class="form-check-label fw-bold" for="is_class_teacher">
+                                        <span class="badge bg-info text-white me-2">CLASS TEACHER</span>
+                                        Mark as Class Teacher
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="class-teacher-fields" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="class_teacher_grade" class="form-label">Class Teacher of Grade</label>
+                                    <select class="form-select" id="class_teacher_grade" name="class_teacher_grade">
+                                        <option value="">Select Grade</option>
+                                        <option value="Nursery">Nursery</option>
+                                        <option value="Reception">Reception</option>
+                                        <option value="1">Grade 1</option>
+                                        <option value="2">Grade 2</option>
+                                        <option value="3">Grade 3</option>
+                                        <option value="4">Grade 4</option>
+                                        <option value="5">Grade 5</option>
+                                        <option value="6">Grade 6</option>
+                                        <option value="7">Grade 7</option>
+                                        <option value="8">Grade 8</option>
+                                        <option value="9">Grade 9</option>
+                                        <option value="10">Grade 10</option>
+                                        <option value="11">Grade 11</option>
+                                        <option value="12">Grade 12</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="class_teacher_section" class="form-label">Class Teacher of Section</label>
+                                    <select class="form-select" id="class_teacher_section" name="class_teacher_section">
+                                        <option value="">Select Section</option>
+                                        <option value="A">Section A</option>
+                                        <option value="B">Section B</option>
+                                        <option value="C">Section C</option>
+                                        <option value="D">Section D</option>
+                                        <option value="E">Section E</option>
+                                        <option value="F">Section F</option>
+                                        <option value="G">Section G</option>
+                                        <option value="H">Section H</option>
+                                        <option value="I">Section I</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Parent Fields -->
+                    <div id="parent-fields" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Select Children to Monitor</label>
+                                <div class="border p-3 rounded" style="max-height: 200px; overflow-y: auto;">
+                                    <div id="student-list">
+                                        <!-- Students will be loaded here via JavaScript -->
+                                        <div class="text-muted">Loading students...</div>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">Select which students this parent can monitor</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-plus me-2"></i>Create Account
+                    </button>
+                    
+                    <script>
+                    function toggleAccountFields() {
+                        const accountType = document.getElementById('account_type').value;
+                        const studentFields = document.getElementById('student-fields');
+                        const teacherFields = document.getElementById('teacher-fields');
+                        const parentFields = document.getElementById('parent-fields');
+                        const gradeLevel = document.getElementById('grade_level');
+                        const section = document.getElementById('section');
+                        const subjectTaught = document.getElementById('subject_taught');
+                        
+                        if (accountType === 'student') {
+                            studentFields.style.display = 'block';
+                            teacherFields.style.display = 'none';
+                            parentFields.style.display = 'none';
+                            gradeLevel.required = true;
+                            section.required = true;
+                            subjectTaught.required = false;
+                        } else if (accountType === 'teacher') {
+                            studentFields.style.display = 'none';
+                            teacherFields.style.display = 'block';
+                            parentFields.style.display = 'none';
+                            gradeLevel.required = false;
+                            section.required = false;
+                            subjectTaught.required = true;
+                        } else if (accountType === 'parent') {
+                            studentFields.style.display = 'none';
+                            teacherFields.style.display = 'none';
+                            parentFields.style.display = 'block';
+                            gradeLevel.required = false;
+                            section.required = false;
+                            subjectTaught.required = false;
+                            loadStudentList();
+                        } else {
+                            studentFields.style.display = 'none';
+                            teacherFields.style.display = 'none';
+                            parentFields.style.display = 'none';
+                            gradeLevel.required = false;
+                            section.required = false;
+                            subjectTaught.required = false;
+                        }
+                    }
+                    
+                    function toggleClassTeacherFields() {
+                        const isClassTeacher = document.getElementById('is_class_teacher').checked;
+                        const classTeacherFields = document.getElementById('class-teacher-fields');
+                        const classTeacherGrade = document.getElementById('class_teacher_grade');
+                        const classTeacherSection = document.getElementById('class_teacher_section');
+                        
+                        if (isClassTeacher) {
+                            classTeacherFields.style.display = 'block';
+                            classTeacherGrade.required = true;
+                            classTeacherSection.required = true;
+                        } else {
+                            classTeacherFields.style.display = 'none';
+                            classTeacherGrade.required = false;
+                            classTeacherSection.required = false;
+                            classTeacherGrade.value = '';
+                            classTeacherSection.value = '';
+                        }
+                    }
+                    
+                    // Password confirmation validation
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const form = document.querySelector('form');
+                        form.addEventListener('submit', function(e) {
+                            const password = document.getElementById('password').value;
+                            const confirmPassword = document.getElementById('confirm_password').value;
+                            
+                            if (password !== confirmPassword) {
+                                e.preventDefault();
+                                alert('Passwords do not match. Please try again.');
+                                document.getElementById('confirm_password').focus();
+                                return false;
+                            }
+                        });
+                    });
+                    
+                    function loadStudentList() {
+                        const studentListDiv = document.getElementById('student-list');
+                        
+                        // Get all students from the user stats table
+                        const userRows = document.querySelectorAll('tbody tr');
+                        let studentHTML = '';
+                        let hasStudents = false;
+                        
+                        userRows.forEach(row => {
+                            const roleCell = row.children[1];
+                            const userCell = row.children[0];
+                            
+                            // Check if this is a student (not admin, teacher, or prefect)
+                            if (!roleCell.innerHTML.includes('ADMIN') && 
+                                !roleCell.innerHTML.includes('TEACHER') &&
+                                !roleCell.innerHTML.includes('PARENT')) {
+                                
+                                hasStudents = true;
+                                const username = userCell.querySelector('small').textContent.replace('@', '');
+                                const fullName = userCell.querySelector('strong').textContent;
+                                const userId = row.querySelector('a[href*="edit_user"]')?.href.split('/').pop() || '';
+                                
+                                if (userId) {
+                                    studentHTML += `
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" name="children_ids" value="${userId}" id="student_${userId}">
+                                            <label class="form-check-label" for="student_${userId}">
+                                                <strong>${fullName}</strong> <small class="text-muted">(@${username})</small>
+                                            </label>
+                                        </div>
+                                    `;
+                                }
+                            }
+                        });
+                        
+                        if (!hasStudents) {
+                            studentHTML = '<div class="text-muted">No students available to assign</div>';
+                        }
+                        
+                        studentListDiv.innerHTML = studentHTML;
+                    }
+                    </script>
+                </form>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>All Users
+                    </h5>
+                    <div class="d-flex align-items-center">
+                        <div class="input-group" style="width: 300px;">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" class="form-control" id="userSearch" placeholder="Search users...">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>User Details</th>
+                                <th>Role & Status</th>
+                                <th>Activity Stats</th>
+                                <th>Date Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user_stat in user_stats %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle me-3">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <div>
+                                            <strong>{{ user_stat[0].full_name }}</strong>
+                                            <br>
+                                            <small class="text-muted">@{{ user_stat[0].username }}</small>
+                                            <br>
+                                            <small class="text-muted">{{ user_stat[0].email }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if user_stat[0].is_admin %}
+                                        <span class="badge bg-danger me-1">ADMIN</span>
+                                    {% elif user_stat[0].is_teacher %}
+                                        <span class="badge bg-secondary me-1">TEACHER</span>
+                                    {% elif user_stat[0].is_parent %}
+                                        <span class="badge bg-info me-1">PARENT</span>
+                                    {% elif user_stat[0].is_prefect and user_stat[0].house %}
+                                        {% if user_stat[0].house == 'St. Patrick' %}
+                                            <span class="badge bg-success me-1">ST. PATRICK</span>
+                                        {% elif user_stat[0].house == 'St. Raphael' %}
+                                            <span class="badge bg-warning text-dark me-1">ST. RAPHAEL</span>
+                                        {% elif user_stat[0].house == 'St. Nicolas' %}
+                                            <span class="badge me-1" style="background-color: #ff6b35; color: white;">ST. NICOLAS</span>
+                                        {% elif user_stat[0].house == 'St. Michael' %}
+                                            <span class="badge bg-info me-1">ST. MICHAEL</span>
+                                        {% endif %}
+                                    {% elif user_stat[0].is_prefect %}
+                                        <span class="badge bg-warning text-dark me-1">PREFECT</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary me-1">STUDENT</span>
+                                    {% endif %}
+                                    
+                                    {% if user_stat[0].grade_level %}
+                                        <br><small class="text-muted fw-bold">Grade: {{ user_stat[0].grade_level }}</small>
+                                    {% elif user_stat[0].subject_taught %}
+                                        <br><small class="text-muted fw-bold">Subject: {{ user_stat[0].subject_taught }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>
+                                        <i class="fas fa-comments me-1"></i>{{ user_stat[1] }} posts<br>
+                                        <i class="fas fa-envelope me-1"></i>{{ user_stat[2] }} messages<br>
+                                        <i class="fas fa-users me-1"></i>{{ user_stat[3] }} groups
+                                    </small>
+                                </td>
+                                <td>
+                                    {{ user_stat[0].date_created.strftime('%Y-%m-%d') if user_stat[0].date_created else 'N/A' }}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('admin_edit_user', user_id=user_stat[0].id) }}" 
+                                           class="btn btn-outline-primary btn-sm" title="Edit User">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        
+                                        {% if not user_stat[0].is_admin and user_stat[0].id != session['user_id'] %}
+                                        <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#deleteUserModal{{ user_stat[0].id }}"
+                                                title="Delete User">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bs-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+
+<!-- Delete User Modals (outside table to prevent flickering) -->
+{% for user_stat in user_stats %}
+    {% if not user_stat[0].is_admin and user_stat[0].id != session['user_id'] %}
+    <div class="modal fade" id="deleteUserModal{{ user_stat[0].id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm User Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Warning:</strong> This action cannot be undone.</p>
+                    <p>Are you sure you want to delete the user account for:</p>
+                    <p><strong>{{ user_stat[0].full_name }}</strong> (@{{ user_stat[0].username }})</p>
+                    <p class="text-muted">This will permanently delete:</p>
+                    <ul class="text-muted">
+                        <li>{{ user_stat[1] }} posts</li>
+                        <li>{{ user_stat[2] }} messages</li>
+                        <li>Group memberships and related data</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form method="POST" action="{{ url_for('admin_delete_user', user_id=user_stat[0].id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-2"></i>Delete User
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}
+
+<script>
+// User search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('userSearch');
+    const userRows = document.querySelectorAll('tbody tr');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            
+            userRows.forEach(function(row) {
+                const fullName = row.querySelector('strong').textContent.toLowerCase();
+                const username = row.querySelector('small.text-muted').textContent.toLowerCase();
+                const email = row.querySelectorAll('small.text-muted')[1]?.textContent.toLowerCase() || '';
+                
+                const matches = fullName.includes(searchTerm) || 
+                              username.includes(searchTerm) || 
+                              email.includes(searchTerm);
+                
+                row.style.display = matches ? '' : 'none';
+            });
+        });
+    }
+
+
+});
+</script>
+{% endblock %}

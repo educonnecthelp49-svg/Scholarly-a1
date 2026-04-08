@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% block title %}Sign In — EduConnect{% endblock %}
+
+{% block content %}
+<div class="login-wrapper">
+    <div class="login-container">
+        <!-- Logo -->
+        <div class="login-logo">
+            <div class="logo-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h1 class="logo-text">EduConnect</h1>
+        </div>
+
+        <!-- Theme Toggle -->
+        <div class="login-theme-toggle">
+            <span class="theme-icon" id="sunIcon"><i class="fas fa-sun"></i></span>
+            <div class="theme-switch" id="themeSwitch" onclick="toggleTheme()"></div>
+            <span class="theme-icon" id="moonIcon"><i class="fas fa-moon"></i></span>
+        </div>
+
+        <!-- Login Form -->
+        <form method="POST" class="login-form" autocomplete="on">
+            <div class="form-group">
+                <input type="text"
+                       class="form-control"
+                       id="username"
+                       name="username"
+                       placeholder="Username"
+                       required
+                       autocomplete="username">
+            </div>
+
+            <div class="form-group">
+                <input type="password"
+                       class="form-control"
+                       id="password"
+                       name="password"
+                       placeholder="Password"
+                       required
+                       autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="login-btn" id="loginBtn">
+                <span class="btn-text">SIGN IN</span>
+                <span class="btn-loading d-none">
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    SIGNING IN...
+                </span>
+            </button>
+        </form>
+
+        <!-- Footer -->
+        <div class="login-footer">
+            <small>Contact your administrator for account access</small>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Duolingo-style Login Page */
+    .login-wrapper {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        background: var(--bg-body);
+    }
+
+    .login-container {
+        width: 100%;
+        max-width: 360px;
+        text-align: center;
+    }
+
+    /* Logo */
+    .login-logo {
+        margin-bottom: 2rem;
+    }
+
+    .logo-icon {
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        background: var(--blue);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 2.2rem;
+        color: white;
+        border: 4px solid var(--blue-dark);
+    }
+
+    .logo-text {
+        font-family: 'Outfit', sans-serif;
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--blue);
+        margin: 0;
+    }
+
+    /* Theme Toggle */
+    .login-theme-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 2rem;
+    }
+
+    .login-theme-toggle .theme-icon {
+        font-size: 1rem;
+        color: var(--text-muted);
+        transition: var(--transition);
+    }
+
+    .login-theme-toggle .theme-switch {
+        position: relative;
+        width: 50px;
+        height: 26px;
+        background: var(--border-color);
+        border-radius: var(--radius-full);
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .login-theme-toggle .theme-switch::after {
+        content: '';
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 20px;
+        height: 20px;
+        background: white;
+        border-radius: 50%;
+        transition: var(--transition);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    [data-theme="dark"] .login-theme-toggle .theme-switch {
+        background: var(--blue);
+    }
+
+    [data-theme="dark"] .login-theme-toggle .theme-switch::after {
+        left: 27px;
+    }
+
+    /* Form */
+    .login-form {
+        margin-bottom: 1.5rem;
+    }
+
+    .login-form .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .login-form .form-control {
+        width: 100%;
+        padding: 14px 18px;
+        font-size: 1rem;
+        font-weight: 500;
+        background: var(--white);
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        transition: var(--transition);
+    }
+
+    .login-form .form-control::placeholder {
+        color: var(--text-muted);
+    }
+
+    .login-form .form-control:focus {
+        border-color: var(--blue);
+        outline: none;
+        box-shadow: none;
+    }
+
+    /* Button - BLUE flat style */
+    .login-btn {
+        width: 100%;
+        padding: 16px 24px;
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        background: var(--blue);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: var(--transition);
+        margin-top: 0.5rem;
+    }
+
+    .login-btn:hover {
+        background: var(--blue-dark);
+    }
+
+    .login-btn:active {
+        transform: scale(0.98);
+    }
+
+    .login-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    /* Footer */
+    .login-footer {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+</style>
+
+<script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const currentTheme = html.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+    }
+
+    // Apply saved theme on load
+    document.addEventListener('DOMContentLoaded', function() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('username').focus();
+    });
+
+    // Form submit handling
+    document.querySelector('.login-form').addEventListener('submit', function(e) {
+        const btn = document.getElementById('loginBtn');
+        const btnText = btn.querySelector('.btn-text');
+        const btnLoading = btn.querySelector('.btn-loading');
+        btn.disabled = true;
+        btnText.classList.add('d-none');
+        btnLoading.classList.remove('d-none');
+    });
+</script>
+{% endblock %}

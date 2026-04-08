@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Messages — EduConnect{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <h1 class="h3 fw-bold mb-0">
+                <i class="fas fa-envelope me-2" style="background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>Direct Messages
+            </h1>
+            <div class="input-group" style="width: 300px;">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control" id="messageSearch" placeholder="Search people...">
+            </div>
+        </div>
+
+        <div class="alert alert-light mb-4" style="background: rgba(124, 58, 237, 0.08) !important; border: 1px solid rgba(124, 58, 237, 0.15); border-left: 4px solid var(--violet);">
+            <i class="fas fa-info-circle me-2" style="color: var(--violet);"></i>
+            Click on any student to start or continue a conversation with them.
+        </div>
+
+        <div id="messages-container">
+        {% if students %}
+            <div class="row">
+                {% for student_data in students %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100 {% if student_data.has_conversation %}border-primary{% endif %}" style="animation: fadeInUp {{ 0.2 + loop.index0 * 0.05 }}s ease;">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="avatar-circle me-3">
+                                    {{ student_data.user.full_name[0].upper() }}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">
+                                        <a href="{{ url_for('view_conversation', username=student_data.user.username) }}"
+                                           class="text-decoration-none" style="color: var(--text-primary);">
+                                            {{ student_data.user.full_name }}
+                                        </a>
+                                        {% if student_data.user.is_admin %}
+                                            <span class="badge bg-danger badge-sm ms-1">ADMIN</span>
+                                        {% elif student_data.user.is_prefect and student_data.user.house %}
+                                            {% if student_data.user.house == 'St. Patrick' %}
+                                                <span class="badge bg-success badge-sm ms-1">ST. PATRICK</span>
+                                            {% elif student_data.user.house == 'St. Raphael' %}
+                                                <span class="badge bg-warning badge-sm ms-1">ST. RAPHAEL</span>
+                                            {% elif student_data.user.house == 'St. Nicolas' %}
+                                                <span class="badge badge-sm ms-1" style="background: linear-gradient(135deg, #ea580c, #f97316); color: white;">ST. NICOLAS</span>
+                                            {% elif student_data.user.house == 'St. Michael' %}
+                                                <span class="badge bg-info badge-sm ms-1">ST. MICHAEL</span>
+                                            {% endif %}
+                                        {% elif student_data.user.is_prefect %}
+                                            <span class="badge bg-warning badge-sm ms-1">PREFECT</span>
+                                        {% endif %}
+                                    </h6>
+                                    <small class="text-muted">
+                                        @{{ student_data.user.username }}
+                                        {% if student_data.user.grade_level %}
+                                            • Grade {{ student_data.user.grade_level }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                {% if student_data.unread_count > 0 %}
+                                    <span class="badge bg-danger">{{ student_data.unread_count }}</span>
+                                {% endif %}
+                            </div>
+
+                            {% if student_data.last_message %}
+                                <div class="rounded p-2 mt-2" style="background: var(--bg-hover);">
+                                    <small class="d-block" style="color: var(--text-secondary);">
+                                        <strong>
+                                            {% if student_data.last_message.sender_id == session.user_id %}
+                                                You:
+                                            {% else %}
+                                                {{ student_data.user.full_name.split()[0] }}:
+                                            {% endif %}
+                                        </strong>
+                                        {{ student_data.last_message.content[:40] }}{% if student_data.last_message.content|length > 40 %}...{% endif %}
+                                    </small>
+                                    <div class="d-flex align-items-center justify-content-end gap-2 mt-1">
+                                        <small class="text-muted" style="font-size: 0.75rem;">{{ student_data.last_message.date_sent.strftime('%b %d, %Y at %I:%M %p') }}</small>
+                                        {% if student_data.last_message.sender_id == session.user_id and student_data.last_message.seen %}
+                                            <i class="fas fa-check-double" style="color: var(--violet); font-size: 0.7rem;" title="Seen"></i>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="text-center mt-2">
+                                    <small class="text-muted">No conversation yet</small>
+                                </div>
+                            {% endif %}
+
+                            <div class="d-grid mt-3">
+                                <a href="{{ url_for('view_conversation', username=student_data.user.username) }}"
+                                   class="btn {% if student_data.has_conversation %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                                    <i class="fas fa-comment me-1"></i>
+                                    {% if student_data.has_conversation %}Continue Chat{% else %}Start Chat{% endif %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-user-slash fa-4x mb-3" style="color: var(--text-muted);"></i>
+                    <h4 style="color: var(--text-secondary);">No other students found</h4>
+                    <p class="text-muted">There are currently no other students to message.</p>
+                </div>
+            </div>
+        {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('messageSearch');
+    const conversationsContainer = document.getElementById('messages-container');
+    let searchTerm = '';
+
+    function filterConversations() {
+        const term = searchTerm.toLowerCase().trim();
+        const cards = conversationsContainer.querySelectorAll('.col-md-6.col-lg-4.mb-3');
+        if (cards.length === 0) return;
+        cards.forEach(function(card) {
+            const fullName = card.querySelector('h6 a')?.textContent.toLowerCase() || '';
+            const username = card.querySelector('small.text-muted')?.textContent.toLowerCase() || '';
+            card.style.display = (fullName.includes(term) || username.includes(term)) ? '' : 'none';
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            searchTerm = this.value;
+            filterConversations();
+        });
+    }
+
+    function getUserBadges(user) {
+        let badges = '';
+        if (user.is_admin) {
+            badges += '<span class="badge bg-danger badge-sm ms-1">ADMIN</span>';
+        } else if (user.is_teacher) {
+            badges += '<span class="badge bg-success badge-sm ms-1">TEACHER</span>';
+        } else if (user.is_prefect && user.house) {
+            const houseColors = { 'St. Patrick': 'bg-success', 'St. Raphael': 'bg-warning', 'St. Michael': 'bg-info' };
+            if (user.house === 'St. Nicolas') {
+                badges += '<span class="badge badge-sm ms-1" style="background: linear-gradient(135deg, #ea580c, #f97316); color: white;">ST. NICOLAS</span>';
+            } else {
+                badges += `<span class="badge ${houseColors[user.house] || 'bg-warning'} badge-sm ms-1">${user.house.toUpperCase()}</span>`;
+            }
+        } else if (user.is_prefect) {
+            badges += '<span class="badge bg-warning badge-sm ms-1">PREFECT</span>';
+        }
+        return badges;
+    }
+
+    function truncateMessage(content, maxLength = 40) {
+        return content.length > maxLength ? content.substring(0, maxLength) + '...' : content;
+    }
+
+    const currentUserId = {{ session.user_id|tojson }};
+
+    function createConversationCard(d) {
+        const borderClass = d.has_conversation ? 'border-primary' : '';
+        const btnClass = d.has_conversation ? 'btn-primary' : 'btn-outline-primary';
+        const btnText = d.has_conversation ? 'Continue Chat' : 'Start Chat';
+        let lastMsg = '';
+        if (d.last_message) {
+            const sender = d.last_message.sender_id === currentUserId ? 'You' : d.full_name.split(' ')[0];
+            lastMsg = `<div class="rounded p-2 mt-2" style="background: var(--bg-hover);"><small class="d-block" style="color: var(--text-secondary);"><strong>${sender}:</strong> ${truncateMessage(d.last_message.content)}</small><small class="text-muted" style="font-size: 0.75rem;">${d.last_message.formatted_time}</small></div>`;
+        } else {
+            lastMsg = '<div class="text-center mt-2"><small class="text-muted">No conversation yet</small></div>';
+        }
+        const unread = d.unread_count > 0 ? `<span class="badge bg-danger">${d.unread_count}</span>` : '';
+
+        return `<div class="col-md-6 col-lg-4 mb-3" data-user-id="${d.user_id}"><div class="card h-100 ${borderClass}"><div class="card-body"><div class="d-flex align-items-center mb-2"><div class="avatar-circle me-3">${d.initial}</div><div class="flex-grow-1"><h6 class="mb-0"><a href="/message/${d.username}" class="text-decoration-none" style="color: var(--text-primary);">${d.full_name}</a>${getUserBadges(d)}</h6><small class="text-muted">@${d.username}${d.grade_level ? ' • Grade ' + d.grade_level : ''}</small></div>${unread}</div>${lastMsg}<div class="d-grid mt-3"><a href="/message/${d.username}" class="btn ${btnClass} btn-sm"><i class="fas fa-comment me-1"></i>${btnText}</a></div></div></div></div>`;
+    }
+
+    function updateConversationsList(conversations) {
+        conversationsContainer.innerHTML = '';
+        if (conversations.length === 0) {
+            conversationsContainer.innerHTML = '<div class="card"><div class="card-body text-center py-5"><i class="fas fa-user-slash fa-4x mb-3" style="color: var(--text-muted);"></i><h4 style="color: var(--text-secondary);">No other students found</h4></div></div>';
+            return;
+        }
+        let content = '<div class="row">';
+        conversations.forEach(c => { content += createConversationCard(c); });
+        content += '</div>';
+        conversationsContainer.innerHTML = content;
+        filterConversations();
+    }
+
+    function fetchConversations() {
+        fetch('/api/conversations/list')
+            .then(r => r.json())
+            .then(data => { if (data.conversations) updateConversationsList(data.conversations); })
+            .catch(e => console.error('Error:', e));
+    }
+
+    setInterval(fetchConversations, 4000);
+    fetchConversations();
+});
+</script>
+{% endblock %}

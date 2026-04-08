@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block title %}Communications Panel - Admin{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 fw-bold text-primary">
+                <i class="fas fa-eye me-2"></i>Communications Panel
+            </h1>
+            <div class="d-flex gap-2 align-items-center">
+                <div class="input-group" style="width: 300px;">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="messageSearchPanel" placeholder="Search messages...">
+                </div>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs" id="communicationsTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="direct-messages-tab" data-bs-toggle="tab" data-bs-target="#direct-messages" type="button" role="tab">
+                    <i class="fas fa-envelope me-2"></i>Direct Messages ({{ direct_messages|length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="group-messages-tab" data-bs-toggle="tab" data-bs-target="#group-messages" type="button" role="tab">
+                    <i class="fas fa-comments me-2"></i>Group Messages ({{ group_messages|length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="groups-tab" data-bs-toggle="tab" data-bs-target="#groups" type="button" role="tab">
+                    <i class="fas fa-users me-2"></i>Groups ({{ all_groups|length }})
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="communicationsTabContent">
+            <!-- Direct Messages Tab -->
+            <div class="tab-pane fade show active" id="direct-messages" role="tabpanel">
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-envelope me-2"></i>Recent Direct Messages
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if direct_messages %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>From</th>
+                                            <th>To</th>
+                                            <th>Message</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for message in direct_messages %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-circle-sm me-2">
+                                                        {{ message.sender.full_name[0].upper() }}
+                                                    </div>
+                                                    <div>
+                                                        <strong>{{ message.sender.full_name }}</strong>
+                                                        {% if message.sender.is_admin %}
+                                                            <span class="badge bg-danger badge-sm ms-1">ADMIN</span>
+                                                        {% elif message.sender.is_prefect %}
+                                                            <span class="badge bg-warning text-dark badge-sm ms-1">PREFECT</span>
+                                                        {% endif %}
+                                                        <br><small class="text-muted">@{{ message.sender.username }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-circle-sm me-2">
+                                                        {{ message.receiver.full_name[0].upper() }}
+                                                    </div>
+                                                    <div>
+                                                        <strong>{{ message.receiver.full_name }}</strong>
+                                                        {% if message.receiver.is_admin %}
+                                                            <span class="badge bg-danger badge-sm ms-1">ADMIN</span>
+                                                        {% elif message.receiver.is_prefect %}
+                                                            <span class="badge bg-warning text-dark badge-sm ms-1">PREFECT</span>
+                                                        {% endif %}
+                                                        <br><small class="text-muted">@{{ message.receiver.username }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="message-preview">
+                                                    {{ message.content[:100] }}{% if message.content|length > 100 %}...{% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    {{ message.date_sent.strftime('%b %d, %Y at %I:%M %p') }}
+                                                </small>
+                                            </td>
+                                            <td>
+                                                {% if message.is_read %}
+                                                    <span class="badge bg-success">Read</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning text-dark">Unread</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-envelope fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No direct messages found</h5>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group Messages Tab -->
+            <div class="tab-pane fade" id="group-messages" role="tabpanel">
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-comments me-2"></i>Recent Group Messages
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if group_messages %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Group</th>
+                                            <th>From</th>
+                                            <th>Message</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for message in group_messages %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    {% if message.group.is_private %}
+                                                        <i class="fas fa-lock text-warning me-2"></i>
+                                                    {% else %}
+                                                        <i class="fas fa-globe text-success me-2"></i>
+                                                    {% endif %}
+                                                    <div>
+                                                        <strong>{{ message.group.name }}</strong>
+                                                        <br><small class="text-muted">{{ 'Private' if message.group.is_private else 'Public' }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-circle-sm me-2">
+                                                        {{ message.user.full_name[0].upper() }}
+                                                    </div>
+                                                    <div>
+                                                        <strong>{{ message.user.full_name }}</strong>
+                                                        {% if message.user.is_admin %}
+                                                            <span class="badge bg-danger badge-sm ms-1">ADMIN</span>
+                                                        {% elif message.user.is_prefect %}
+                                                            <span class="badge bg-warning text-dark badge-sm ms-1">PREFECT</span>
+                                                        {% endif %}
+                                                        <br><small class="text-muted">@{{ message.user.username }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="message-preview">
+                                                    {{ message.content[:100] }}{% if message.content|length > 100 %}...{% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    {{ message.date_sent.strftime('%b %d, %Y at %I:%M %p') }}
+                                                </small>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No group messages found</h5>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Groups Tab -->
+            <div class="tab-pane fade" id="groups" role="tabpanel">
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-users me-2"></i>All Groups
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if all_groups %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Group Name</th>
+                                            <th>Type</th>
+                                            <th>Admin</th>
+                                            <th>Members</th>
+                                            <th>Created</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for group in all_groups %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    {% if group.is_private %}
+                                                        <i class="fas fa-lock text-warning me-2"></i>
+                                                    {% else %}
+                                                        <i class="fas fa-globe text-success me-2"></i>
+                                                    {% endif %}
+                                                    <strong>{{ group.name }}</strong>
+                                                </div>
+                                                {% if group.description %}
+                                                    <small class="text-muted">{{ group.description }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if group.is_private %}
+                                                    <span class="badge bg-warning text-dark">Private</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">Public</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-circle-sm me-2">
+                                                        {{ group.admin.full_name[0].upper() }}
+                                                    </div>
+                                                    <div>
+                                                        <strong>{{ group.admin.full_name }}</strong>
+                                                        {% if group.admin.is_admin %}
+                                                            <span class="badge bg-danger badge-sm ms-1">ADMIN</span>
+                                                        {% elif group.admin.is_prefect %}
+                                                            <span class="badge bg-warning text-dark badge-sm ms-1">PREFECT</span>
+                                                        {% endif %}
+                                                        <br><small class="text-muted">@{{ group.admin.username }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary">{{ group.get_member_count() }}</span>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    {{ group.date_created.strftime('%b %d, %Y') }}
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{{ url_for('view_group', group_id=group.id) }}" 
+                                                       class="btn btn-outline-primary btn-sm">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{{ url_for('delete_group', group_id=group.id) }}" 
+                                                       class="btn btn-outline-danger btn-sm"
+                                                       onclick="return confirm('Are you sure you want to delete the group &quot;{{ group.name }}&quot;? This will delete all messages and cannot be undone.')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No groups found</h5>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.message-preview {
+    max-width: 300px;
+    word-break: break-word;
+}
+
+.nav-tabs .nav-link {
+    color: #333 !important;
+    background: #fff !important;
+}
+.nav-tabs .nav-link.active {
+    color: #4a3fa3 !important;
+    background: #f8f9fa !important;
+    font-weight: bold;
+    border-bottom: 2px solid #4a3fa3;
+}
+
+.avatar-circle-sm {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.tab-pane {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<script>
+// Communications panel search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('messageSearchPanel');
+    const directMessageRows = document.querySelectorAll('#direct-messages .table tbody tr');
+    const groupMessageRows = document.querySelectorAll('#group-messages .table tbody tr');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            
+            // Search direct messages
+            directMessageRows.forEach(function(row) {
+                const senderName = row.cells[0]?.textContent.toLowerCase() || '';
+                const receiverName = row.cells[1]?.textContent.toLowerCase() || '';
+                const messageContent = row.cells[2]?.textContent.toLowerCase() || '';
+                
+                const matches = senderName.includes(searchTerm) || 
+                              receiverName.includes(searchTerm) ||
+                              messageContent.includes(searchTerm);
+                
+                row.style.display = matches ? '' : 'none';
+            });
+            
+            // Search group messages  
+            groupMessageRows.forEach(function(row) {
+                const senderName = row.cells[0]?.textContent.toLowerCase() || '';
+                const groupName = row.cells[1]?.textContent.toLowerCase() || '';
+                const messageContent = row.cells[2]?.textContent.toLowerCase() || '';
+                
+                const matches = senderName.includes(searchTerm) || 
+                              groupName.includes(searchTerm) ||
+                              messageContent.includes(searchTerm);
+                
+                row.style.display = matches ? '' : 'none';
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

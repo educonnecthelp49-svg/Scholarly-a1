@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile — EduConnect{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card" style="border: 1px solid rgba(124, 58, 237, 0.15) !important; animation: fadeInUp 0.4s ease;">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Edit Profile</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+                            <div class="form-text text-muted"><i class="fas fa-info-circle me-1"></i>Choose a unique username that represents you.</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="full_name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="full_name" value="{{ user.full_name }}" disabled style="opacity: 0.6;">
+                            <div class="form-text text-muted"><i class="fas fa-lock me-1"></i>Full name cannot be changed. Contact admin if needed.</div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="bio" class="form-label">Bio</label>
+                        <textarea class="form-control" id="bio" name="bio" rows="4" placeholder="Tell others about yourself...">{{ user.bio }}</textarea>
+                        <div class="form-text text-muted"><i class="fas fa-info-circle me-1"></i>Share something about your interests, hobbies, or what makes you unique!</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" value="{{ user.email }}" disabled style="opacity: 0.6;">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Grade Level</label>
+                            <input type="text" class="form-control" value="{{ user.grade_level or 'Not set' }}" disabled style="opacity: 0.6;">
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('profile') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Cancel</a>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-4" style="animation: fadeInUp 0.6s ease;">
+            <div class="card-header"><h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Profile Tips</h6></div>
+            <div class="card-body">
+                <ul class="mb-0" style="color: var(--text-secondary);">
+                    <li>Choose a username that's easy for classmates to remember</li>
+                    <li>Write a friendly bio to help others get to know you</li>
+                    <li>Keep your profile appropriate for a school environment</li>
+                    <li>Your profile is visible to other students in your school</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

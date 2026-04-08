@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Circulars{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-bullhorn text-warning me-2"></i>School Circulars</h2>
+                <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#createCircularModal">
+                    <i class="fas fa-plus me-2"></i>Create Circular
+                </button>
+            </div>
+
+            <!-- Create Circular Modal -->
+            <div class="modal fade" id="createCircularModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Create New Circular</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form method="POST" action="{{ url_for('create_circular') }}" enctype="multipart/form-data">
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-8 mb-3">
+                                        <label for="title" class="form-label">Title</label>
+                                        <input type="text" class="form-control" name="title" required 
+                                               placeholder="e.g., Holiday Notice, Sports Day Event">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="category" class="form-label">Category</label>
+                                        <select class="form-select" name="category" required>
+                                            <option value="">Select Category</option>
+                                            <option value="Holiday">Holiday</option>
+                                            <option value="Event">Event</option>
+                                            <option value="Reminder">Reminder</option>
+                                            <option value="General">General</option>
+                                            <option value="Academic">Academic</option>
+                                            <option value="Sports">Sports</option>
+                                            <option value="Emergency">Emergency</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="content" class="form-label">Content</label>
+                                    <textarea class="form-control" name="content" rows="6" required
+                                              placeholder="Write the full circular content here..."></textarea>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="priority" class="form-label">Priority</label>
+                                        <select class="form-select" name="priority">
+                                            <option value="Normal" selected>Normal</option>
+                                            <option value="High">High</option>
+                                            <option value="Low">Low</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="expires_on" class="form-label">Expiry Date (Optional)</label>
+                                        <input type="date" class="form-control" name="expires_on">
+                                        <div class="form-text">Leave blank for no expiry</div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="attachment" class="form-label">Attachment (Optional)</label>
+                                        <input type="file" class="form-control" name="attachment">
+                                        <div class="form-text">Any file type (max 50MB)</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-warning">Create Circular</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs for All Circulars and My Circulars -->
+            <ul class="nav nav-tabs mb-4" id="circularTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="all-circulars-tab" data-bs-toggle="tab" 
+                            data-bs-target="#all-circulars" type="button" role="tab">
+                        <i class="fas fa-list me-2"></i>All Circulars ({{ circulars|length }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="my-circulars-tab" data-bs-toggle="tab" 
+                            data-bs-target="#my-circulars" type="button" role="tab">
+                        <i class="fas fa-user me-2"></i>My Circulars ({{ user_circulars|length }})
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="circularTabContent">
+                <!-- All Circulars Tab -->
+                <div class="tab-pane fade show active" id="all-circulars" role="tabpanel">
+                    {% if circulars %}
+                    <div class="row">
+                        {% for circular in circulars %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100 {% if circular.priority == 'High' %}border-danger{% elif circular.priority == 'Low' %}border-secondary{% endif %}">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 class="card-title">{{ circular.title }}</h5>
+                                        {% if circular.priority == 'High' %}
+                                        <span class="badge bg-danger">High</span>
+                                        {% elif circular.priority == 'Low' %}
+                                        <span class="badge bg-secondary">Low</span>
+                                        {% else %}
+                                        <span class="badge bg-primary">Normal</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <span class="badge bg-info">{{ circular.category }}</span>
+                                        <small class="text-muted">by {{ circular.created_by.full_name }}</small>
+                                    </div>
+                                    
+                                    <p class="card-text">{{ circular.content[:100] }}{% if circular.content|length > 100 %}...{% endif %}</p>
+                                    
+                                    <div class="text-muted small mb-3">
+                                        <div><i class="fas fa-calendar me-1"></i>{{ circular.date_published.strftime('%B %d, %Y') }}</div>
+                                        {% if circular.expires_on %}
+                                        <div><i class="fas fa-clock me-1"></i>Expires: {{ circular.expires_on.strftime('%B %d, %Y') }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-transparent">
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-primary btn-sm flex-fill" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#viewCircularModal{{ circular.id }}">
+                                            <i class="fas fa-eye me-1"></i>View
+                                        </button>
+                                        {% if circular.attachment_filename %}
+                                        <a href="{{ url_for('download_circular_attachment', circular_id=circular.id) }}" 
+                                           class="btn btn-outline-secondary btn-sm">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% include 'circular_modal.html' %}
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-bullhorn fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Circulars Available</h4>
+                        <p class="text-muted">No active circulars at the moment.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- My Circulars Tab -->
+                <div class="tab-pane fade" id="my-circulars" role="tabpanel">
+                    {% if user_circulars %}
+                    <div class="row">
+                        {% for circular in user_circulars %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100 {% if circular.priority == 'High' %}border-danger{% elif circular.priority == 'Low' %}border-secondary{% endif %}">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 class="card-title">{{ circular.title }}</h5>
+                                        {% if not circular.is_active %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% elif circular.is_expired %}
+                                        <span class="badge bg-warning">Expired</span>
+                                        {% elif circular.priority == 'High' %}
+                                        <span class="badge bg-danger">High</span>
+                                        {% else %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <span class="badge bg-info mb-2">{{ circular.category }}</span>
+                                    
+                                    <p class="card-text">{{ circular.content[:100] }}{% if circular.content|length > 100 %}...{% endif %}</p>
+                                    
+                                    <div class="text-muted small mb-3">
+                                        <div><i class="fas fa-calendar me-1"></i>{{ circular.date_published.strftime('%B %d, %Y') }}</div>
+                                        {% if circular.expires_on %}
+                                        <div><i class="fas fa-clock me-1"></i>Expires: {{ circular.expires_on.strftime('%B %d, %Y') }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-transparent">
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-primary btn-sm flex-fill" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#viewCircularModal{{ circular.id }}">
+                                            <i class="fas fa-eye me-1"></i>View
+                                        </button>
+                                        <a href="{{ url_for('delete_circular', circular_id=circular.id) }}" 
+                                           class="btn btn-outline-danger btn-sm"
+                                           onclick="return confirm('Are you sure you want to delete this circular?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% include 'circular_modal.html' %}
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-bullhorn fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Circulars Created</h4>
+                        <p class="text-muted">You haven't created any circulars yet.</p>
+                        <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#createCircularModal">
+                            <i class="fas fa-plus me-2"></i>Create Your First Circular
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set minimum date to today for expiry date
+document.addEventListener('DOMContentLoaded', function() {
+    const expiryInput = document.querySelector('input[name="expires_on"]');
+    if (expiryInput) {
+        const today = new Date().toISOString().split('T')[0];
+        expiryInput.min = today;
+    }
+});
+</script>
+{% endblock %}

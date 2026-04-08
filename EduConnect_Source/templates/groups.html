@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Groups — EduConnect{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <h1 class="h3 fw-bold mb-0">
+                <i class="fas fa-users me-2" style="background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>Groups
+            </h1>
+            <div class="d-flex gap-2">
+                <div class="input-group" style="width: 250px;">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="groupSearch" placeholder="Search groups...">
+                </div>
+                <a href="{{ url_for('create_group') }}" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Create Group</a>
+            </div>
+        </div>
+
+        <!-- Join Private Group -->
+        <div class="card mb-4" style="border: 1px solid rgba(124, 58, 237, 0.15) !important; animation: fadeInUp 0.3s ease;">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-ticket-alt me-2" style="color: var(--violet);"></i>Join Private Group</h5>
+                <p class="text-muted mb-3">Have an invite code? Enter it below to join a private group.</p>
+                <form method="POST" action="{{ url_for('join_group') }}" class="row g-3">
+                    <div class="col-md-8">
+                        <input type="text" class="form-control" name="invite_code" placeholder="Enter invite code (e.g., ABC12345)" required>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-success w-100"><i class="fas fa-sign-in-alt me-1"></i>Join Group</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Your Groups -->
+        {% if user_groups %}
+        <div class="card mb-4" style="animation: fadeInUp 0.4s ease;">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user-friends me-2"></i>Your Groups ({{ user_groups|length }})</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for group in user_groups %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card h-100" style="border: 1px solid var(--glass-border) !important;">
+                            <div class="card-body">
+                                <div class="d-flex align-items-start justify-content-between mb-2">
+                                    <h6 class="card-title mb-0">
+                                        <a href="{{ url_for('view_group', group_id=group.id) }}" class="text-decoration-none" style="color: var(--text-primary);">{{ group.name }}</a>
+                                    </h6>
+                                    {% if group.is_private %}
+                                        <span class="badge bg-secondary"><i class="fas fa-lock me-1"></i>Private</span>
+                                    {% else %}
+                                        <span class="badge bg-success"><i class="fas fa-globe me-1"></i>Public</span>
+                                    {% endif %}
+                                </div>
+                                {% if group.description %}
+                                    <p class="card-text small" style="color: var(--text-muted);">{{ group.description[:80] }}{% if group.description|length > 80 %}...{% endif %}</p>
+                                {% endif %}
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <small class="text-muted"><i class="fas fa-users me-1"></i>{{ group.get_member_count() }} members</small>
+                                    {% if group.admin_id == current_user.id %}
+                                        <span class="badge bg-warning"><i class="fas fa-crown me-1"></i>Admin</span>
+                                    {% endif %}
+                                </div>
+                                <div class="d-flex gap-1">
+                                    <a href="{{ url_for('view_group', group_id=group.id) }}" class="btn btn-primary btn-sm flex-grow-1">
+                                        <i class="fas fa-comments me-1"></i>Chat & Members
+                                    </a>
+                                    {% if current_user.is_admin %}
+                                    <a href="{{ url_for('delete_group', group_id=group.id) }}" class="btn btn-outline-danger btn-sm"
+                                       onclick="return confirm('Are you sure you want to delete &quot;{{ group.name }}&quot;? This will delete all messages and cannot be undone.')"
+                                       title="Delete Group (Admin)"><i class="fas fa-trash"></i></a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Public Groups -->
+        <div class="card" style="animation: fadeInUp 0.5s ease;">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    {% if current_user.is_admin %}
+                        <i class="fas fa-cogs me-2"></i>All Groups (Admin View)
+                    {% else %}
+                        <i class="fas fa-globe me-2"></i>Public Groups
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if public_groups %}
+                    <div class="row">
+                        {% for group in public_groups %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100" style="border: 1px solid var(--glass-border) !important;">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start justify-content-between mb-2">
+                                        <h6 class="card-title mb-0">
+                                            <a href="{{ url_for('view_group', group_id=group.id) }}" class="text-decoration-none" style="color: var(--text-primary);">{{ group.name }}</a>
+                                        </h6>
+                                        {% if group.is_private %}
+                                            <span class="badge bg-secondary"><i class="fas fa-lock me-1"></i>Private</span>
+                                        {% else %}
+                                            <span class="badge bg-success"><i class="fas fa-globe me-1"></i>Public</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if group.description %}
+                                        <p class="card-text small" style="color: var(--text-muted);">{{ group.description[:80] }}{% if group.description|length > 80 %}...{% endif %}</p>
+                                    {% endif %}
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <small class="text-muted"><i class="fas fa-users me-1"></i>{{ group.get_member_count() }} members</small>
+                                        <small class="text-muted">Created {{ group.date_created.strftime('%b %d, %Y') }}</small>
+                                    </div>
+                                    {% if not group.is_member(current_user) %}
+                                        <div class="d-flex gap-1 mt-2">
+                                            {% if not group.is_private %}
+                                            <form method="POST" action="{{ url_for('join_group') }}" class="flex-grow-1">
+                                                <input type="hidden" name="group_id" value="{{ group.id }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-primary w-100"><i class="fas fa-plus me-1"></i>Join Group</button>
+                                            </form>
+                                            {% else %}
+                                            <a href="{{ url_for('view_group', group_id=group.id) }}" class="btn btn-primary btn-sm flex-grow-1">
+                                                <i class="fas fa-eye me-1"></i>{% if current_user.is_admin %}View (Admin){% else %}Private{% endif %}
+                                            </a>
+                                            {% endif %}
+                                            {% if current_user.is_admin %}
+                                            <a href="{{ url_for('delete_group', group_id=group.id) }}" class="btn btn-outline-danger btn-sm"
+                                               onclick="return confirm('Are you sure you want to delete &quot;{{ group.name }}&quot;?')"
+                                               title="Delete Group (Admin)"><i class="fas fa-trash"></i></a>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        <div class="d-flex gap-1 mt-2">
+                                            <a href="{{ url_for('view_group', group_id=group.id) }}" class="btn btn-primary btn-sm flex-grow-1"><i class="fas fa-comments me-1"></i>Chat & Members</a>
+                                            {% if current_user.is_admin %}
+                                            <a href="{{ url_for('delete_group', group_id=group.id) }}" class="btn btn-outline-danger btn-sm"
+                                               onclick="return confirm('Delete &quot;{{ group.name }}&quot;?')"><i class="fas fa-trash"></i></a>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-4x mb-3" style="color: var(--text-muted);"></i>
+                        <h4 style="color: var(--text-secondary);">No public groups yet</h4>
+                        <p class="text-muted">Be the first to create a public group for your classmates!</p>
+                        <a href="{{ url_for('create_group') }}" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Create First Group</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('groupSearch');
+    const groupCards = document.querySelectorAll('.col-md-6.col-lg-4.mb-3');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            groupCards.forEach(function(card) {
+                const groupName = card.querySelector('.card-title a')?.textContent.toLowerCase() || '';
+                const description = card.querySelector('.card-text')?.textContent.toLowerCase() || '';
+                card.style.display = (groupName.includes(searchTerm) || description.includes(searchTerm)) ? '' : 'none';
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

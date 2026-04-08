@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}Homework Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-tasks text-success me-2"></i>Homework Management</h2>
+                <div class="d-flex gap-2">
+                    <!-- Subject Filter -->
+                    <select class="form-select" style="width: 200px;" onchange="filterBySubject(this.value)">
+                        {% for subject in subjects %}
+                        <option value="{{ subject.lower() }}" {% if current_subject == subject.lower() %}selected{% endif %}>
+                            {{ subject }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#homeworkModal">
+                        <i class="fas fa-plus me-2"></i>Create Homework
+                    </button>
+                </div>
+            </div>
+
+            <!-- Create Homework Modal -->
+            <div class="modal fade" id="homeworkModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Create Homework Assignment</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form method="POST" action="{{ url_for('create_homework') }}" enctype="multipart/form-data">
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-8 mb-3">
+                                        <label for="title" class="form-label">Homework Title</label>
+                                        <input type="text" class="form-control" name="title" required 
+                                               placeholder="e.g., Chapter 5 Exercises">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="subject" class="form-label">Subject</label>
+                                        <select class="form-select" name="subject" required>
+                                            <option value="">Select Subject</option>
+                                            <option value="Hindi">Hindi</option>
+                                            <option value="Maths">Maths</option>
+                                            <option value="Science">Science</option>
+                                            <option value="French">French</option>
+                                            <option value="Sanskrit">Sanskrit</option>
+                                            <option value="German">German</option>
+                                            <option value="SST">SST</option>
+                                            <option value="Computer">Computer</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <!-- Grade and Section Targeting -->
+                                <div class="mb-3">
+                                    <label class="form-label">Target Grades</label>
+                                    <div class="row">
+                                        {% for grade in ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'] %}
+                                        <div class="col-md-3 col-sm-4 col-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="target_grades" value="{{ grade }}" id="hw_grade{{ loop.index }}">
+                                                <label class="form-check-label" for="hw_grade{{ loop.index }}">{{ grade }}</label>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <small class="text-muted">Leave empty to make visible to all grades</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Target Sections</label>
+                                    <div class="row">
+                                        {% for section in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'] %}
+                                        <div class="col-md-2 col-sm-3 col-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="target_sections" value="{{ section }}" id="hw_section{{ section }}">
+                                                <label class="form-check-label" for="hw_section{{ section }}">{{ section }}</label>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <small class="text-muted">Leave empty to include all sections of selected grades</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description</label>
+                                    <textarea class="form-control" name="description" rows="4" required
+                                              placeholder="Detailed instructions for the homework..."></textarea>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="due_date" class="form-label">Due Date & Time</label>
+                                        <input type="datetime-local" class="form-control" name="due_date" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="attachment" class="form-label">Attachment (Optional)</label>
+                                        <input type="file" class="form-control" name="attachment">
+                                        <div class="form-text">Any file type (max 50MB)</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-success">Create Homework</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Homework List -->
+            {% if homework_list %}
+            <div class="row">
+                {% for hw in homework_list %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 {% if hw.is_overdue %}border-danger{% endif %}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title">{{ hw.title }}</h5>
+                                {% if hw.is_overdue %}
+                                <span class="badge bg-danger">Overdue</span>
+                                {% elif (hw.due_date - get_ist_now()).days <= 1 %}
+                                <span class="badge bg-warning">Due Soon</span>
+                                {% else %}
+                                <span class="badge bg-success">Active</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                {% if hw.subject %}
+                                <span class="badge bg-success">{{ hw.subject }}</span>
+                                {% endif %}
+                                {% if hw.get_target_grades() %}
+                                <small class="text-muted">
+                                    <i class="fas fa-users me-1"></i>
+                                    {% for grade in hw.get_target_grades() %}{{ grade }}{% if not loop.last %}, {% endif %}{% endfor %}
+                                    {% if hw.get_target_sections() %}
+                                    ({{ hw.get_target_sections()|join(', ') }})
+                                    {% endif %}
+                                </small>
+                                {% endif %}
+                            </div>
+                            
+                            <p class="card-text">{{ hw.description[:100] }}{% if hw.description|length > 100 %}...{% endif %}</p>
+                            
+                            <div class="text-muted small mb-3">
+                                <div><i class="fas fa-calendar-plus me-1"></i>Assigned: {{ hw.assigned_date.strftime('%m/%d/%Y') }}</div>
+                                <div><i class="fas fa-calendar-check me-1"></i>Due: {{ hw.due_date.strftime('%m/%d/%Y at %I:%M %p') }}</div>
+                                {% if hw.attachment_filename %}
+                                <div><i class="fas fa-paperclip me-1"></i>{{ hw.attachment_filename }} ({{ hw.attachment_size_mb }} MB)</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-primary btn-sm flex-fill" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#viewHomeworkModal{{ hw.id }}">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </button>
+                                {% if hw.attachment_filename %}
+                                <a href="{{ url_for('download_homework_attachment', homework_id=hw.id) }}" 
+                                   class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-download me-1"></i>Attachment
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Homework Details Modal -->
+                <div class="modal fade" id="viewHomeworkModal{{ hw.id }}" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">{{ hw.title }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                {% if hw.subject %}
+                                <p><strong>Subject:</strong> {{ hw.subject }}</p>
+                                {% endif %}
+                                <p><strong>Assigned:</strong> {{ hw.assigned_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                                <p><strong>Due:</strong> {{ hw.due_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                                
+                                <h6>Description:</h6>
+                                <div class="bg-light p-3 rounded">
+                                    {{ hw.description.replace('\n', '<br>')|safe }}
+                                </div>
+                                
+                                {% if hw.attachment_filename %}
+                                <h6 class="mt-3">Attachment:</h6>
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fas fa-file"></i>
+                                    <span>{{ hw.attachment_filename }} ({{ hw.attachment_size_mb }} MB)</span>
+                                    <a href="{{ url_for('download_homework_attachment', homework_id=hw.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-download"></i> Download
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No Homework Assignments Yet</h4>
+                <p class="text-muted">Create your first homework assignment!</p>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#homeworkModal">
+                    <i class="fas fa-plus me-2"></i>Create Homework
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Set minimum datetime to current time
+document.addEventListener('DOMContentLoaded', function() {
+    const dueDateInput = document.querySelector('input[name="due_date"]');
+    if (dueDateInput) {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        dueDateInput.min = now.toISOString().slice(0, 16);
+    }
+});
+
+function filterBySubject(subject) {
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.set('subject', subject);
+    window.location = currentUrl;
+}
+</script>
+
+
+
+{% endblock %}

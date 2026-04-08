@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Classwork{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-file-pdf text-primary me-2"></i>Classwork</h2>
+                <div class="d-flex gap-2 align-items-center">
+                    <!-- Subject Filter -->
+                    <select class="form-select" style="width: 200px;" onchange="filterBySubject(this.value)">
+                        {% for subject in subjects %}
+                        <option value="{{ subject.lower() }}" {% if current_subject == subject.lower() %}selected{% endif %}>
+                            {{ subject }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="text-muted">
+                        <small>View and download classwork materials</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Classwork List -->
+            {% if classworks %}
+            <div class="row">
+                {% for cw in classworks %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ cw.title }}</h5>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                {% if cw.subject %}
+                                <span class="badge bg-primary">{{ cw.subject }}</span>
+                                {% endif %}
+                                <small class="text-muted">by {{ cw.teacher.full_name }}</small>
+                            </div>
+                            {% if cw.get_target_grades() %}
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-users me-1"></i>For: 
+                                    {% for grade in cw.get_target_grades() %}{{ grade }}{% if not loop.last %}, {% endif %}{% endfor %}
+                                    {% if cw.get_target_sections() %}
+                                    ({{ cw.get_target_sections()|join(', ') }})
+                                    {% endif %}
+                                </small>
+                            </div>
+                            {% endif %}
+                            {% if cw.description %}
+                            <p class="card-text">{{ cw.description }}</p>
+                            {% endif %}
+                            <div class="text-muted small mb-3">
+                                <div><i class="fas fa-calendar me-1"></i>{{ cw.upload_date.strftime('%B %d, %Y at %I:%M %p') }}</div>
+                                <div><i class="fas fa-file me-1"></i>{{ cw.file_size_mb }} MB</div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a href="{{ url_for('download_classwork', classwork_id=cw.id) }}" 
+                               class="btn btn-primary btn-sm w-100">
+                                <i class="fas fa-download me-1"></i>Download PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-file-pdf fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No Classwork Available</h4>
+                <p class="text-muted">Teachers haven't uploaded any classwork materials yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function filterBySubject(subject) {
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.set('subject', subject);
+    window.location = currentUrl;
+}
+</script>
+
+{% endblock %}

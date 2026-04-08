@@ -1,0 +1,54 @@
+<!-- Circular Details Modal -->
+<div class="modal fade" id="viewCircularModal{{ circular.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ circular.title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex gap-2 mb-3">
+                    <span class="badge bg-info">{{ circular.category }}</span>
+                    {% if circular.priority == 'High' %}
+                    <span class="badge bg-danger">High Priority</span>
+                    {% elif circular.priority == 'Low' %}
+                    <span class="badge bg-secondary">Low Priority</span>
+                    {% else %}
+                    <span class="badge bg-primary">Normal Priority</span>
+                    {% endif %}
+                    {% if not circular.is_active %}
+                    <span class="badge bg-secondary">Inactive</span>
+                    {% elif circular.is_expired %}
+                    <span class="badge bg-warning">Expired</span>
+                    {% endif %}
+                </div>
+                
+                <p><strong>Published by:</strong> {{ circular.created_by.full_name }}</p>
+                <p><strong>Date:</strong> {{ circular.date_published.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                {% if circular.expires_on %}
+                <p><strong>Expires:</strong> {{ circular.expires_on.strftime('%B %d, %Y') }}</p>
+                {% endif %}
+                
+                <h6>Content:</h6>
+                <div class="bg-light p-3 rounded">
+                    {{ circular.content.replace('\n', '<br>')|safe }}
+                </div>
+                
+                {% if circular.attachment_filename %}
+                <h6 class="mt-3">Attachment:</h6>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fas fa-file"></i>
+                    <span>{{ circular.attachment_filename }} ({{ circular.attachment_size_mb }} MB)</span>
+                    <a href="{{ url_for('download_circular_attachment', circular_id=circular.id) }}" 
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-download"></i> Download
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

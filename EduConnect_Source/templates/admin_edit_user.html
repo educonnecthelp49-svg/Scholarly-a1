@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Edit User - {{ user.full_name }} - School Social Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 fw-bold text-primary">
+                <i class="fas fa-user-edit me-2"></i>Edit User: {{ user.full_name }}
+            </h1>
+            <a href="{{ url_for('admin_accounts') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Accounts
+            </a>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <!-- Basic Information -->
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Basic Information</h5>
+                            
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" name="username" 
+                                       value="{{ user.username }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ user.email }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="full_name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="full_name" name="full_name" 
+                                       value="{{ user.full_name }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="grade_level" class="form-label">Grade Level</label>
+                                <select class="form-select" id="grade_level" name="grade_level">
+                                    <option value="">Select Grade</option>
+                                    <option value="Nursery" {{ 'selected' if user.grade_level == 'Nursery' }}>Nursery</option>
+                                    <option value="Reception" {{ 'selected' if user.grade_level == 'Reception' }}>Reception</option>
+                                    <option value="1" {{ 'selected' if user.grade_level == '1' }}>Grade 1</option>
+                                    <option value="2" {{ 'selected' if user.grade_level == '2' }}>Grade 2</option>
+                                    <option value="3" {{ 'selected' if user.grade_level == '3' }}>Grade 3</option>
+                                    <option value="4" {{ 'selected' if user.grade_level == '4' }}>Grade 4</option>
+                                    <option value="5" {{ 'selected' if user.grade_level == '5' }}>Grade 5</option>
+                                    <option value="6" {{ 'selected' if user.grade_level == '6' }}>Grade 6</option>
+                                    <option value="7" {{ 'selected' if user.grade_level == '7' }}>Grade 7</option>
+                                    <option value="8" {{ 'selected' if user.grade_level == '8' }}>Grade 8</option>
+                                    <option value="9" {{ 'selected' if user.grade_level == '9' }}>Grade 9</option>
+                                    <option value="10" {{ 'selected' if user.grade_level == '10' }}>Grade 10</option>
+                                    <option value="11" {{ 'selected' if user.grade_level == '11' }}>Grade 11</option>
+                                    <option value="12" {{ 'selected' if user.grade_level == '12' }}>Grade 12</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="section" class="form-label">Section</label>
+                                <select class="form-select" id="section" name="section">
+                                    <option value="">Select Section</option>
+                                    <option value="A" {{ 'selected' if user.section == 'A' }}>Section A</option>
+                                    <option value="B" {{ 'selected' if user.section == 'B' }}>Section B</option>
+                                    <option value="C" {{ 'selected' if user.section == 'C' }}>Section C</option>
+                                    <option value="D" {{ 'selected' if user.section == 'D' }}>Section D</option>
+                                    <option value="E" {{ 'selected' if user.section == 'E' }}>Section E</option>
+                                    <option value="F" {{ 'selected' if user.section == 'F' }}>Section F</option>
+                                    <option value="G" {{ 'selected' if user.section == 'G' }}>Section G</option>
+                                    <option value="H" {{ 'selected' if user.section == 'H' }}>Section H</option>
+                                    <option value="I" {{ 'selected' if user.section == 'I' }}>Section I</option>
+                                </select>
+                            </div>
+                            
+                            {% if user.is_teacher %}
+                            <div class="mb-3">
+                                <label for="subject_taught" class="form-label">Subject Taught</label>
+                                <input type="text" class="form-control" id="subject_taught" name="subject_taught" 
+                                       value="{{ user.subject_taught or '' }}" placeholder="e.g., Mathematics, English, Science">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="class_teacher_grade" class="form-label">Class Teacher of Grade</label>
+                                <select class="form-select" id="class_teacher_grade" name="class_teacher_grade">
+                                    <option value="">Not a Class Teacher</option>
+                                    <option value="Nursery" {{ 'selected' if user.class_teacher_grade == 'Nursery' }}>Nursery</option>
+                                    <option value="Reception" {{ 'selected' if user.class_teacher_grade == 'Reception' }}>Reception</option>
+                                    <option value="1" {{ 'selected' if user.class_teacher_grade == '1' }}>Grade 1</option>
+                                    <option value="2" {{ 'selected' if user.class_teacher_grade == '2' }}>Grade 2</option>
+                                    <option value="3" {{ 'selected' if user.class_teacher_grade == '3' }}>Grade 3</option>
+                                    <option value="4" {{ 'selected' if user.class_teacher_grade == '4' }}>Grade 4</option>
+                                    <option value="5" {{ 'selected' if user.class_teacher_grade == '5' }}>Grade 5</option>
+                                    <option value="6" {{ 'selected' if user.class_teacher_grade == '6' }}>Grade 6</option>
+                                    <option value="7" {{ 'selected' if user.class_teacher_grade == '7' }}>Grade 7</option>
+                                    <option value="8" {{ 'selected' if user.class_teacher_grade == '8' }}>Grade 8</option>
+                                    <option value="9" {{ 'selected' if user.class_teacher_grade == '9' }}>Grade 9</option>
+                                    <option value="10" {{ 'selected' if user.class_teacher_grade == '10' }}>Grade 10</option>
+                                    <option value="11" {{ 'selected' if user.class_teacher_grade == '11' }}>Grade 11</option>
+                                    <option value="12" {{ 'selected' if user.class_teacher_grade == '12' }}>Grade 12</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="class_teacher_section" class="form-label">Class Teacher of Section</label>
+                                <select class="form-select" id="class_teacher_section" name="class_teacher_section">
+                                    <option value="">Not a Class Teacher</option>
+                                    <option value="A" {{ 'selected' if user.class_teacher_section == 'A' }}>Section A</option>
+                                    <option value="B" {{ 'selected' if user.class_teacher_section == 'B' }}>Section B</option>
+                                    <option value="C" {{ 'selected' if user.class_teacher_section == 'C' }}>Section C</option>
+                                    <option value="D" {{ 'selected' if user.class_teacher_section == 'D' }}>Section D</option>
+                                    <option value="E" {{ 'selected' if user.class_teacher_section == 'E' }}>Section E</option>
+                                    <option value="F" {{ 'selected' if user.class_teacher_section == 'F' }}>Section F</option>
+                                    <option value="G" {{ 'selected' if user.class_teacher_section == 'G' }}>Section G</option>
+                                    <option value="H" {{ 'selected' if user.class_teacher_section == 'H' }}>Section H</option>
+                                    <option value="I" {{ 'selected' if user.class_teacher_section == 'I' }}>Section I</option>
+                                </select>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Additional Settings -->
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Additional Settings</h5>
+                            
+                            <div class="mb-3">
+                                <label for="bio" class="form-label">Bio</label>
+                                <textarea class="form-control" id="bio" name="bio" rows="4" 
+                                          placeholder="Tell us about yourself...">{{ user.bio or '' }}</textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_prefect" name="is_prefect" 
+                                           {{ 'checked' if user.is_prefect }}>
+                                    <label class="form-check-label" for="is_prefect">
+                                        <i class="fas fa-star text-warning me-1"></i>Mark as Prefect
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="password" class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="password" name="password" 
+                                       placeholder="Leave blank to keep current password">
+                                <small class="form-text text-muted">Only enter a password if you want to change it</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- User Statistics -->
+                    <hr>
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="mb-3">User Statistics</h5>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="card text-center">
+                                        <div class="card-body">
+                                            <i class="fas fa-comments fa-2x text-primary mb-2"></i>
+                                            <h4>{{ user.posts|length }}</h4>
+                                            <small class="text-muted">Posts</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card text-center">
+                                        <div class="card-body">
+                                            <i class="fas fa-envelope fa-2x text-success mb-2"></i>
+                                            <h4>{{ user.sent_messages|length }}</h4>
+                                            <small class="text-muted">Messages Sent</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card text-center">
+                                        <div class="card-body">
+                                            <i class="fas fa-users fa-2x text-info mb-2"></i>
+                                            <h4>{{ user.group_memberships|length }}</h4>
+                                            <small class="text-muted">Groups Joined</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card text-center">
+                                        <div class="card-body">
+                                            <i class="fas fa-calendar fa-2x text-warning mb-2"></i>
+                                            <h4>{{ user.date_created.strftime('%b %Y') }}</h4>
+                                            <small class="text-muted">Joined</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('admin_accounts') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Update User
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

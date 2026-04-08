@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}{{ group.name }} — EduConnect{% endblock %}
+
+{% block content %}
+<div class="container-fluid h-100">
+    <!-- Group Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3" style="border: 1px solid rgba(124, 58, 237, 0.15) !important; animation: fadeInUp 0.3s ease;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-3">
+                    <div>
+                        <h1 class="h3 fw-bold mb-2">
+                            <i class="fas fa-users me-2" style="color: var(--violet);"></i>{{ group.name }}
+                            {% if group.is_private %}
+                                <span class="badge bg-secondary ms-2"><i class="fas fa-lock me-1"></i>Private</span>
+                            {% else %}
+                                <span class="badge bg-success ms-2"><i class="fas fa-globe me-1"></i>Public</span>
+                            {% endif %}
+                        </h1>
+                        {% if group.description %}
+                            <p class="text-muted mb-2">{{ group.description }}</p>
+                        {% endif %}
+                        <div class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>Created {{ group.date_created.strftime('%B %d, %Y') }}
+                            <span class="mx-2">•</span>
+                            <i class="fas fa-users me-1"></i>{{ group.get_member_count() }} members
+                            {% if is_admin %}
+                                <span class="mx-2">•</span><i class="fas fa-crown me-1" style="color: var(--amber);"></i>You are the admin
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        {% if is_admin %}
+                            <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#inviteCodeModal"><i class="fas fa-ticket-alt me-1"></i>Invite Code</button>
+                            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteGroupModal"><i class="fas fa-trash me-1"></i>Delete Group</button>
+                        {% else %}
+                            <a href="{{ url_for('leave_group', group_id=group.id) }}" class="btn btn-outline-warning btn-sm" onclick="return confirm('Are you sure you want to leave this group?')">
+                                <i class="fas fa-sign-out-alt me-1"></i>Leave Group
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- Chat Layout -->
+    <div class="row h-100" style="min-height: 65vh;">
+        <!-- Chat Area -->
+        <div class="col-lg-8">
+            <div class="mb-3">
+                <a href="{{ url_for('groups') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i>Back to Groups</a>
+            </div>
+
+            <div class="card h-100" id="chatSection" style="border: 1px solid var(--glass-border) !important;">
+                <div class="card-header"><h5 class="mb-0"><i class="fas fa-comments me-2"></i>Group Chat</h5></div>
+                <div class="card-body overflow-auto p-3" id="chatContainer" style="height: calc(100% - 120px); background: linear-gradient(180deg, rgba(10,14,26,0.5) 0%, transparent 100%);">
+                {% if group_messages %}
+                    {% for message in group_messages %}
+                    <div class="d-flex mb-3">
+                        <div class="avatar-circle-sm me-2 flex-shrink-0">{{ message.user.full_name[0].upper() }}</div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-1">
+                                <h6 class="mb-0 me-2" style="font-size: 0.9rem;">
+                                    <a href="{{ url_for('view_user_profile', username=message.user.username) }}" class="text-decoration-none" style="color: var(--text-accent);">{{ message.user.full_name }}</a>
+                                    {% if message.user.is_admin %}<i class="fas fa-crown ms-1" style="color: var(--rose);" title="Admin"></i>
+                                    {% elif message.user.is_teacher %}<i class="fas fa-chalkboard-teacher ms-1" style="color: var(--emerald);" title="Teacher"></i>
+                                    {% elif message.user.is_prefect %}<i class="fas fa-star ms-1" style="color: var(--amber);" title="Prefect"></i>{% endif %}
+                                    {% if message.user.id == group.admin_id %}<i class="fas fa-crown ms-1" style="color: var(--amber);" title="Group Admin"></i>{% endif %}
+                                </h6>
+                                <small class="text-muted">{{ message.date_sent.strftime('%I:%M %p') }}{% if message.is_edited %} <span>(edited)</span>{% endif %}</small>
+                                {% if message.user_id == session.user_id or (current_user.is_prefect and not (message.user.is_admin or message.user.is_teacher)) or current_user.is_admin or current_user.is_teacher %}
+                                <div class="dropdown ms-auto">
+                                    <button class="btn btn-sm btn-link p-0" type="button" data-bs-toggle="dropdown" style="color: var(--text-muted);"><i class="fas fa-ellipsis-v"></i></button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        {% if message.user_id == session.user_id %}
+                                        <li><a class="dropdown-item" href="#" onclick="editMessage({{ message.id }}, 'group')"><i class="fas fa-edit me-2"></i>Edit</a></li>
+                                        <li><a class="dropdown-item text-danger" href="#" onclick="deleteMessage({{ message.id }}, 'group')"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                                        {% endif %}
+                                        {% if (current_user.is_prefect or current_user.is_teacher or current_user.is_admin) and message.user_id != session.user_id and current_user.can_report_or_delete_user(message.user) %}
+                                        {% if message.user_id == session.user_id %}<li><hr class="dropdown-divider"></li>{% endif %}
+                                        <li><a class="dropdown-item" style="color: var(--amber);" href="#" onclick="reportContent('group_message', {{ message.id }})"><i class="fas fa-flag me-2"></i>Report</a></li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="rounded-3 p-3" style="max-width: 400px; background: var(--bg-secondary); border: 1px solid var(--border-color);">
+                                <p class="mb-0" id="message-content-{{ message.id }}" style="color: var(--text-secondary);">{{ message.content }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-comment-slash fa-3x mb-3" style="color: var(--text-muted);"></i>
+                        <p class="text-muted">No messages yet. Start the conversation!</p>
+                    </div>
+                {% endif %}
+                <div id="bottom"></div>
+            </div>
+                <div class="card-footer p-3" style="background: rgba(15, 23, 42, 0.5); border-top: 1px solid var(--border-color);">
+                    <form method="POST" action="{{ url_for('send_group_message', group_id=group.id) }}">
+                        <div class="input-group">
+                            <input type="text" class="form-control rounded-pill" name="content" placeholder="Type a message..." required style="padding: 12px 20px;">
+                            <button type="submit" class="btn btn-primary rounded-circle ms-2 no-loading" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Members Panel -->
+        <div class="col-lg-4">
+            <div class="card h-100" id="membersSection" style="border: 1px solid var(--glass-border) !important;">
+                <div class="card-header"><h5 class="mb-0"><i class="fas fa-user-friends me-2"></i>Members ({{ members|length }})</h5></div>
+                <div class="card-body overflow-auto">
+                {% if members %}
+                    {% for member in members %}
+                    <div class="d-flex align-items-center mb-3 p-2 rounded" style="transition: all 0.2s ease; cursor: pointer;" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='transparent'">
+                        <div class="avatar-circle me-3" style="width: 36px; height: 36px; font-size: 0.8rem;">{{ member.full_name[0].upper() }}</div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0" style="font-size: 0.9rem;">
+                                <a href="{{ url_for('view_user_profile', username=member.username) }}" class="text-decoration-none" style="color: var(--text-primary);">{{ member.full_name }}</a>
+                                {% if member.is_prefect %}<i class="fas fa-star ms-1" style="color: var(--amber);" title="Prefect"></i>{% endif %}
+                                {% if member.id == group.admin_id %}<i class="fas fa-crown ms-1" style="color: var(--amber);" title="Group Admin"></i>{% endif %}
+                            </h6>
+                            <small class="text-muted">@{{ member.username }}{% if member.grade_level %} • Grade {{ member.grade_level }}{% endif %}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-user-slash fa-3x mb-3" style="color: var(--text-muted);"></i>
+                        <p class="text-muted">No members in this group yet.</p>
+                    </div>
+                {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Invite Code Modal -->
+{% if is_admin %}
+<div class="modal fade" id="inviteCodeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title"><i class="fas fa-ticket-alt me-2" style="color: var(--violet);"></i>Invite Code</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <p class="mb-3" style="color: var(--text-secondary);">Share this invite code with students you want to join this group:</p>
+                <div class="d-flex align-items-center">
+                    <code class="p-2 rounded flex-grow-1 me-2" id="inviteCodeText" style="background: var(--bg-hover); color: var(--text-accent); font-size: 1.1rem; letter-spacing: 2px;">{{ group.invite_code }}</code>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="copyInviteCode()"><i class="fas fa-copy me-1"></i>Copy</button>
+                </div>
+                <div class="alert alert-light mt-3 mb-0"><i class="fas fa-info-circle me-2" style="color: var(--cyan);"></i>Students can use this code to join your group from the Groups page.</div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteGroupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2" style="color: var(--rose);"></i>Delete Group</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <p class="mb-3" style="color: var(--text-secondary);">Are you sure you want to delete <strong>"{{ group.name }}"</strong>?</p>
+                <div class="alert alert-light" style="background: rgba(244, 63, 94, 0.08) !important; border-left: 4px solid var(--rose);"><i class="fas fa-exclamation-triangle me-2" style="color: var(--rose);"></i><strong>Warning:</strong> This action cannot be undone.</div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><a href="{{ url_for('delete_group', group_id=group.id) }}" class="btn btn-danger"><i class="fas fa-trash me-1"></i>Delete Group</a></div>
+        </div>
+    </div>
+</div>
+
+<script>
+function editMessage(messageId, type) {
+    const content = document.getElementById('message-content-' + messageId).textContent;
+    const newContent = prompt('Edit your message:', content);
+    if (newContent && newContent.trim() !== '' && newContent !== content) {
+        const form = document.createElement('form'); form.method = 'POST';
+        form.action = type === 'direct' ? `/edit_message/${messageId}` : `/edit_group_message/${messageId}`;
+        const input = document.createElement('input'); input.type = 'hidden'; input.name = 'content'; input.value = newContent;
+        form.appendChild(input); document.body.appendChild(form); form.submit();
+    }
+}
+function deleteMessage(messageId, type) {
+    if (confirm('Are you sure you want to delete this message?')) {
+        const form = document.createElement('form'); form.method = 'POST';
+        form.action = type === 'direct' ? `/delete_message/${messageId}` : `/delete_group_message/${messageId}`;
+        document.body.appendChild(form); form.submit();
+    }
+}
+function copyInviteCode() {
+    const inviteCodeText = document.getElementById('inviteCodeText').textContent;
+    navigator.clipboard.writeText(inviteCodeText).then(function() {
+        const copyBtn = document.querySelector('[onclick="copyInviteCode()"]');
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="fas fa-check me-1"></i>Copied!'; copyBtn.classList.remove('btn-outline-primary'); copyBtn.classList.add('btn-success');
+        setTimeout(function() { copyBtn.innerHTML = originalText; copyBtn.classList.remove('btn-success'); copyBtn.classList.add('btn-outline-primary'); }, 2000);
+    });
+}
+function reportContent(contentType, contentId) {
+    document.getElementById('reportContentType').value = contentType; document.getElementById('reportContentId').value = contentId; document.getElementById('reportJustification').value = '';
+    var modal = new bootstrap.Modal(document.getElementById('reportModal')); modal.show();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const chatContainer = document.getElementById('chatContainer');
+    if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
+    let lastMessageTimestamp = 0;
+    const groupId = {{ group.id }};
+    const existingMessages = document.querySelectorAll('[id^="message-content-"]');
+    if (existingMessages.length > 0) lastMessageTimestamp = Date.now() / 1000;
+
+    const groupMessageForm = document.querySelector('form[action*="send_group_message"]');
+    const groupMessageInput = groupMessageForm.querySelector('input[name="content"]');
+    groupMessageForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const content = groupMessageInput.value.trim(); if (!content) return;
+        groupMessageForm.style.opacity = '0.7'; groupMessageInput.disabled = true;
+        fetch(`/api/send_group_message/${groupId}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, body: JSON.stringify({ content: content }), credentials: 'same-origin' })
+        .then(r => r.json()).then(data => { if (data.success) { addGroupMessageToChat(data.message); groupMessageInput.value = ''; lastMessageTimestamp = data.message.timestamp; scrollToBottom(); } else { alert('Error: ' + (data.error || 'Unknown')); } })
+        .catch(e => { console.error('Error:', e); alert('Error sending message.'); })
+        .finally(() => { groupMessageForm.style.opacity = '1'; groupMessageInput.disabled = false; groupMessageInput.focus(); });
+    });
+
+    setInterval(function() {
+        fetch(`/api/group/${groupId}/messages?since=${lastMessageTimestamp}`).then(r => r.json()).then(data => {
+            if (data.messages && data.messages.length > 0) { data.messages.forEach(m => { addGroupMessageToChat(m); lastMessageTimestamp = Math.max(lastMessageTimestamp, m.timestamp); }); scrollToBottom(); }
+        }).catch(e => console.error('Error:', e));
+    }, 2000);
+
+    function addGroupMessageToChat(message) {
+        const chatContainer = document.getElementById('chatContainer');
+        let userBadgesHtml = '';
+        message.user_badges.forEach(badge => { userBadgesHtml += `<i class="${badge.icon} ${badge.color} ms-1" title="${badge.title}"></i>`; });
+        let dropdownHtml = '';
+        if (message.can_edit || message.can_report) {
+            dropdownHtml = `<div class="dropdown ms-auto"><button class="btn btn-sm btn-link p-0" type="button" data-bs-toggle="dropdown" style="color: var(--text-muted);"><i class="fas fa-ellipsis-v"></i></button><ul class="dropdown-menu dropdown-menu-end">`;
+            if (message.can_edit) dropdownHtml += `<li><a class="dropdown-item" href="#" onclick="editMessage(${message.id}, 'group')"><i class="fas fa-edit me-2"></i>Edit</a></li><li><a class="dropdown-item text-danger" href="#" onclick="deleteMessage(${message.id}, 'group')"><i class="fas fa-trash me-2"></i>Delete</a></li>`;
+            if (message.can_report) { if (message.can_edit) dropdownHtml += `<li><hr class="dropdown-divider"></li>`; dropdownHtml += `<li><a class="dropdown-item" style="color: var(--amber);" href="#" onclick="reportContent('group_message', ${message.id})"><i class="fas fa-flag me-2"></i>Report</a></li>`; }
+            dropdownHtml += `</ul></div>`;
+        }
+        const el = document.createElement('div'); el.className = 'd-flex mb-3';
+        el.innerHTML = `<div class="avatar-circle-sm me-2 flex-shrink-0">${message.user_initial}</div><div class="flex-grow-1"><div class="d-flex align-items-center mb-1"><h6 class="mb-0 me-2" style="font-size: 0.9rem;"><a href="/profile/${message.user_username}" class="text-decoration-none" style="color: var(--text-accent);">${message.user_name}</a>${userBadgesHtml}</h6><small class="text-muted">${message.formatted_time}${message.is_edited ? ' <span>(edited)</span>' : ''}</small>${dropdownHtml}</div><div class="rounded-3 p-3" style="max-width: 400px; background: var(--bg-secondary); border: 1px solid var(--border-color);"><p class="mb-0" id="message-content-${message.id}" style="color: var(--text-secondary);">${message.content}</p></div></div>`;
+        chatContainer.appendChild(el);
+    }
+    function scrollToBottom() { const c = document.getElementById('chatContainer'); if (c) c.scrollTop = c.scrollHeight; }
+    groupMessageInput.addEventListener('keypress', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); groupMessageForm.dispatchEvent(new Event('submit')); } });
+});
+</script>
+
+<!-- Report Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title"><i class="fas fa-flag me-2" style="color: var(--amber);"></i>Report Content</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <form method="POST" action="{{ url_for('report_content') }}"><div class="modal-body">
+            <div class="alert alert-light"><i class="fas fa-info-circle me-2" style="color: var(--cyan);"></i>Report inappropriate content for admin review.</div>
+            <input type="hidden" id="reportContentType" name="content_type"><input type="hidden" id="reportContentId" name="content_id">
+            <div class="mb-3"><label class="form-label">Justification:</label><textarea class="form-control" id="reportJustification" name="justification" rows="4" placeholder="Please explain why this content is inappropriate..." required></textarea></div>
+        </div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-warning"><i class="fas fa-flag me-1"></i>Submit Report</button></div></form>
+    </div></div>
+</div>
+
+<style>
+@media (max-width: 991px) {
+    #chatSection { height: 60vh !important; }
+    #membersSection { height: 40vh !important; }
+}
+</style>
+{% endif %}
+{% endblock %}

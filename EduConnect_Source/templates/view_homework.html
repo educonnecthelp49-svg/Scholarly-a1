@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Homework{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-tasks text-success me-2"></i>Homework</h2>
+                <div class="d-flex gap-2 align-items-center">
+                    <!-- Subject Filter -->
+                    <select class="form-select" style="width: 200px;" onchange="filterBySubject(this.value)">
+                        {% for subject in subjects %}
+                        <option value="{{ subject.lower() }}" {% if current_subject == subject.lower() %}selected{% endif %}>
+                            {{ subject }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="text-muted">
+                        <small>View homework assignments and deadlines</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Homework List -->
+            {% if homework_list %}
+            <div class="row">
+                {% for hw in homework_list %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 {% if hw.is_overdue %}border-danger{% endif %}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title">{{ hw.title }}</h5>
+                                {% if hw.is_overdue %}
+                                <span class="badge bg-danger">Overdue</span>
+                                {% elif (hw.due_date - get_ist_now()).days <= 1 %}
+                                <span class="badge bg-warning">Due Soon</span>
+                                {% else %}
+                                <span class="badge bg-success">Active</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                {% if hw.subject %}
+                                <span class="badge bg-success">{{ hw.subject }}</span>
+                                {% endif %}
+                                <small class="text-muted">by {{ hw.teacher.full_name }}</small>
+                            </div>
+                            {% if hw.get_target_grades() %}
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-users me-1"></i>For: 
+                                    {% for grade in hw.get_target_grades() %}{{ grade }}{% if not loop.last %}, {% endif %}{% endfor %}
+                                    {% if hw.get_target_sections() %}
+                                    ({{ hw.get_target_sections()|join(', ') }})
+                                    {% endif %}
+                                </small>
+                            </div>
+                            {% endif %}
+                            
+                            <p class="card-text">{{ hw.description[:100] }}{% if hw.description|length > 100 %}...{% endif %}</p>
+                            
+                            <div class="text-muted small mb-3">
+                                <div><i class="fas fa-calendar-plus me-1"></i>Assigned: {{ hw.assigned_date.strftime('%m/%d/%Y') }}</div>
+                                <div><i class="fas fa-calendar-check me-1"></i>Due: {{ hw.due_date.strftime('%m/%d/%Y at %I:%M %p') }}</div>
+                                {% if hw.attachment_filename %}
+                                <div><i class="fas fa-paperclip me-1"></i>{{ hw.attachment_filename }} ({{ hw.attachment_size_mb }} MB)</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary btn-sm flex-fill" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#viewHomeworkModal{{ hw.id }}">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </button>
+                                {% if hw.attachment_filename %}
+                                <a href="{{ url_for('download_homework_attachment', homework_id=hw.id) }}" 
+                                   class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-download me-1"></i>Attachment
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Homework Details Modal -->
+                <div class="modal fade" id="viewHomeworkModal{{ hw.id }}" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">{{ hw.title }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p><strong>Teacher:</strong> {{ hw.teacher.full_name }}</p>
+                                {% if hw.subject %}
+                                <p><strong>Subject:</strong> {{ hw.subject }}</p>
+                                {% endif %}
+                                <p><strong>Assigned:</strong> {{ hw.assigned_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                                <p><strong>Due:</strong> {{ hw.due_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                                
+                                <h6>Description:</h6>
+                                <div class="bg-light p-3 rounded">
+                                    {{ hw.description.replace('\n', '<br>')|safe }}
+                                </div>
+                                
+                                {% if hw.attachment_filename %}
+                                <h6 class="mt-3">Attachment:</h6>
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fas fa-file"></i>
+                                    <span>{{ hw.attachment_filename }} ({{ hw.attachment_size_mb }} MB)</span>
+                                    <a href="{{ url_for('download_homework_attachment', homework_id=hw.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-download"></i> Download
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No Homework Assignments</h4>
+                <p class="text-muted">Teachers haven't assigned any homework yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function filterBySubject(subject) {
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.set('subject', subject);
+    window.location = currentUrl;
+}
+</script>
+
+{% endblock %}
