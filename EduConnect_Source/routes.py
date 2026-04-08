@@ -1,8 +1,10 @@
 from flask import render_template, request, redirect, url_for, flash, session, jsonify
-from app import app, db
-from models import (User, Post, Comment, Like, DirectMessage, Group, GroupMembership, 
-                   GroupMessage, LostAndFound, Classwork, Homework, Circular, 
-                   ParentChild, DailyPostingActivity, CalendarEvent, Announcement, Report, get_ist_now)
+from EduConnect_Source.app import app, db
+from EduConnect_Source.models import (
+    User, Post, Comment, Like, DirectMessage, Group, GroupMembership,
+    GroupMessage, LostAndFound, Classwork, Homework, Circular,
+    ParentChild, DailyPostingActivity, CalendarEvent, Announcement, Report, get_ist_now
+)
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 from sqlalchemy import or_, and_, func, case
@@ -10,7 +12,6 @@ from sqlalchemy.orm import joinedload, selectinload, subqueryload
 from datetime import datetime
 import os
 import logging
-
 # Make helper functions available to templates
 @app.context_processor
 def utility_processor():
