@@ -39,7 +39,7 @@ CORS(app=app)
 
 with app.app_context():
     # Import models to ensure tables are created
-    import models as models
+    import EduConnect_Source.models as models
     db.create_all()
 
 # Import routes after app initialization
