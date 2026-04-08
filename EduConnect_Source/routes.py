@@ -1,5 +1,6 @@
 from flask import render_template, request, redirect, url_for, flash, session, jsonify
-from EduConnect_Source.app import app, db
+from flask import current_app
+from EduConnect_Source.extensions import db
 from EduConnect_Source.models import (
     User, Post, Comment, Like, DirectMessage, Group, GroupMembership,
     GroupMessage, LostAndFound, Classwork, Homework, Circular,
