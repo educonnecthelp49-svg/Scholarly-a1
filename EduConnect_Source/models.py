@@ -1,4 +1,4 @@
-from extensions import db
+from EduConnect_Source.extensions import db
 from datetime import datetime, timezone, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import Index, func
